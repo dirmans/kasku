@@ -341,7 +341,7 @@ export default function Dashboard({ session }) {
                       <th className="pb-3 pt-1">Kategori</th>
                       <th className="pb-3 pt-1">Tipe</th>
                       <th className="pb-3 pt-1 text-right">Jumlah</th>
-                      <th className="pb-3 pt-1 text-center">Aksi</th>
+                      {import.meta.env.DEV && <th className="pb-3 pt-1 text-center">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -374,24 +374,26 @@ export default function Dashboard({ session }) {
                         }`}>
                           {t.type === 'pemasukan' ? '+' : '-'} {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(t.amount)}
                         </td>
-                        <td className="py-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEditTransaction(t)}
-                              className="p-1.5 rounded border border-border text-text3 hover:text-textMain hover:bg-surface2 transition-all"
-                              title="Edit"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTransaction(t.id)}
-                              className="p-1.5 rounded border border-border text-text3 hover:text-expense hover:bg-expenseBg hover:border-[#f1c4c4] transition-all"
-                              title="Hapus"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </td>
+                        {import.meta.env.DEV && (
+                          <td className="py-3 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleEditTransaction(t)}
+                                className="p-1.5 rounded border border-border text-text3 hover:text-textMain hover:bg-surface2 transition-all"
+                                title="Edit"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTransaction(t.id)}
+                                className="p-1.5 rounded border border-border text-text3 hover:text-expense hover:bg-expenseBg hover:border-[#f1c4c4] transition-all"
+                                title="Hapus"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
