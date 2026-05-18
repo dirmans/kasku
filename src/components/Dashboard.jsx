@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
+import TransactionModal from './TransactionModal';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard({ session }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -59,7 +62,13 @@ export default function Dashboard({ session }) {
             <p className="text-[12px] text-text3 mt-0.5">Ringkasan aktivitas keuangan Anda</p>
           </div>
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]">
+            <button 
+              className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
+              onClick={() => {
+                setEditingTransaction(null);
+                setIsModalOpen(true);
+              }}
+            >
               + Transaksi Baru
             </button>
           </div>
@@ -68,6 +77,11 @@ export default function Dashboard({ session }) {
           {renderContent()}
         </div>
       </main>
+      <TransactionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        transaction={editingTransaction} 
+      />
     </div>
   );
 }
