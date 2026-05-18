@@ -7,6 +7,8 @@ export default function SettingsTab({ session, onReset }) {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
+  const isAuthorized = import.meta.env.DEV || session?.user?.email === 'kwokkwon@gmail.com';
+
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (!password) return alert('Kata sandi tidak boleh kosong');
@@ -44,16 +46,14 @@ export default function SettingsTab({ session, onReset }) {
       // 1. Delete all transactions
       const { error: txErr } = await supabase
         .from('transactions')
-        .delete()
-        .eq('user_id', session.user.id);
+        .delete();
       
       if (txErr) throw txErr;
 
       // 2. Delete all categories
       const { error: catErr } = await supabase
         .from('categories')
-        .delete()
-        .eq('user_id', session.user.id);
+        .delete();
       
       if (catErr) throw catErr;
 
@@ -131,7 +131,7 @@ export default function SettingsTab({ session, onReset }) {
       </div>
 
       {/* Data Management Warning */}
-      {import.meta.env.DEV && (
+      {isAuthorized && (
         <div className="bg-surface rounded-xl border border-red-200 p-5 shadow-sm space-y-4">
           <h3 className="font-bold text-[14px] text-red-600 uppercase tracking-[0.6px]">⚠️ Zona Bahaya</h3>
           <p className="text-[12.5px] text-text3">

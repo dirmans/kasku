@@ -18,7 +18,6 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
         const { data, error } = await supabase
           .from('categories')
           .select('*')
-          .eq('user_id', session.user.id)
           .order('name');
         
         if (error) throw error;

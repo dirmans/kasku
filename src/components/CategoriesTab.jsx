@@ -8,6 +8,7 @@ const POPULAR_EMOJIS = [
 ];
 
 export default function CategoriesTab({ session }) {
+  const isAuthorized = import.meta.env.DEV || session?.user?.email === 'kwokkwon@gmail.com';
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState('pengeluaran'); // 'pemasukan' or 'pengeluaran'
@@ -26,7 +27,6 @@ export default function CategoriesTab({ session }) {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('user_id', session.user.id)
         .order('name');
       
       if (error) throw error;
@@ -102,15 +102,17 @@ export default function CategoriesTab({ session }) {
           <h2 className="text-[20px] font-semibold text-textMain">Kelola Kategori</h2>
           <p className="text-[12px] text-text3 mt-0.5">Atur kategori pemasukan dan pengeluaran Anda</p>
         </div>
-        <button
-          onClick={() => {
-            setFormType(activeType);
-            setShowAddForm(!showAddForm);
-          }}
-          className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
-        >
-          {showAddForm ? 'Batal' : '+ Kategori Baru'}
-        </button>
+        {isAuthorized && (
+          <button
+            onClick={() => {
+              setFormType(activeType);
+              setShowAddForm(!showAddForm);
+            }}
+            className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
+          >
+            {showAddForm ? 'Batal' : '+ Kategori Baru'}
+          </button>
+        )}
       </div>
 
       {showAddForm && (
@@ -225,12 +227,14 @@ export default function CategoriesTab({ session }) {
                   <p className="text-[10px] text-text3 uppercase tracking-[0.4px]">{cat.type}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(cat.id)}
-                className="w-7 h-7 rounded border border-border flex items-center justify-center text-text3 hover:text-expense hover:border-[#f1c4c4] hover:bg-expenseBg transition-all"
-              >
-                🗑️
-              </button>
+              {isAuthorized && (
+                <button
+                  onClick={() => handleDelete(cat.id)}
+                  className="w-7 h-7 rounded border border-border flex items-center justify-center text-text3 hover:text-expense hover:border-[#f1c4c4] hover:bg-expenseBg transition-all"
+                >
+                  🗑️
+                </button>
+              )}
             </div>
           ))}
         </div>

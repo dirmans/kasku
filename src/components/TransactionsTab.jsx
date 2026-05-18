@@ -5,8 +5,10 @@ export default function TransactionsTab({
   categories, 
   loading, 
   onEdit, 
-  onDelete 
+  onDelete,
+  session
 }) {
+  const isAuthorized = import.meta.env.DEV || session?.user?.email === 'kwokkwon@gmail.com';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('all');
@@ -229,7 +231,7 @@ export default function TransactionsTab({
                     <th className="pb-3 pt-1">Kategori</th>
                     <th className="pb-3 pt-1">Tipe</th>
                     <th className="pb-3 pt-1 text-right">Jumlah</th>
-                    {import.meta.env.DEV && <th className="pb-3 pt-1 text-center">Aksi</th>}
+                    {isAuthorized && <th className="pb-3 pt-1 text-center">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
@@ -262,7 +264,7 @@ export default function TransactionsTab({
                       }`}>
                         {t.type === 'pemasukan' ? '+' : '-'} {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(t.amount)}
                       </td>
-                      {import.meta.env.DEV && (
+                      {isAuthorized && (
                         <td className="py-3.5 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
