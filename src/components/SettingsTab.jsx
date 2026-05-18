@@ -131,22 +131,24 @@ export default function SettingsTab({ session, onReset }) {
       </div>
 
       {/* Data Management Warning */}
-      <div className="bg-surface rounded-xl border border-red-200 p-5 shadow-sm space-y-4">
-        <h3 className="font-bold text-[14px] text-red-600 uppercase tracking-[0.6px]">⚠️ Zona Bahaya</h3>
-        <p className="text-[12.5px] text-text3">
-          Jika Anda mengalami masalah dengan database Anda atau ingin memulai dari awal lagi, Anda dapat melakukan reset total di bawah ini. Tindakan ini akan menghapus semua transaksi dan kategori Anda selamanya.
-        </p>
+      {import.meta.env.DEV && (
+        <div className="bg-surface rounded-xl border border-red-200 p-5 shadow-sm space-y-4">
+          <h3 className="font-bold text-[14px] text-red-600 uppercase tracking-[0.6px]">⚠️ Zona Bahaya</h3>
+          <p className="text-[12.5px] text-text3">
+            Jika Anda mengalami masalah dengan database Anda atau ingin memulai dari awal lagi, Anda dapat melakukan reset total di bawah ini. Tindakan ini akan menghapus semua transaksi dan kategori Anda selamanya.
+          </p>
 
-        <div>
-          <button
-            onClick={handleResetData}
-            disabled={resetLoading}
-            className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-[13px] font-medium transition-colors hover:bg-red-50 disabled:opacity-40"
-          >
-            {resetLoading ? 'Memproses Reset...' : 'Hapus & Reset Semua Data'}
-          </button>
+          <div>
+            <button
+              onClick={handleResetData}
+              disabled={resetLoading}
+              className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-[13px] font-medium transition-colors hover:bg-red-50 disabled:opacity-40"
+            >
+              {resetLoading ? 'Memproses Reset...' : 'Hapus & Reset Semua Data'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
