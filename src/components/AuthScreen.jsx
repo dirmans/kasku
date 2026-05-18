@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function AuthScreen() {
+  const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +42,7 @@ export default function AuthScreen() {
         <div className="font-serif text-[28px] mb-1">KasKu</div>
         <div className="text-[13px] text-text3 mb-7">Catatan keuangan pribadi</div>
         
-        {import.meta.env.DEV && (
+        {isLocal && (
           <div className="grid grid-cols-2 gap-1 bg-surface2 rounded-lg p-1 mb-6">
             <button 
               className={`p-2 rounded-md text-[13px] font-medium transition-all ${isLogin ? 'bg-surface text-textMain shadow-[0_1px_3px_rgba(0,0,0,0.1)]' : 'text-text2 bg-transparent'}`}

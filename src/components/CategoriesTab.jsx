@@ -8,7 +8,8 @@ const POPULAR_EMOJIS = [
 ];
 
 export default function CategoriesTab({ session }) {
-  const isAuthorized = import.meta.env.DEV || session?.user?.email === 'kwokkwon@gmail.com';
+  const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isAuthorized = isLocal;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState('pengeluaran'); // 'pemasukan' or 'pengeluaran'
