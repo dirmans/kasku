@@ -232,18 +232,19 @@ export default function ReportsTab({ transactions, categories, loading }) {
       
       // Text Header
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
+      doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('KasKu', margin, 18);
+      doc.text('KasKu', margin, 16);
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(160, 158, 150);
-      doc.text('Laporan Keuangan', margin, 25);
-      doc.text('Periode: ' + periodText, margin, 31);
+      doc.text('Bhineka Djaya Primasatya', margin, 22);
+      doc.text('Laporan Keuangan', margin, 27);
+      doc.text('Periode: ' + periodText, margin, 32);
 
-      doc.text('Dicetak: ' + nowStr, pageW - margin, 25, { align: 'right' });
-      doc.text(reportTransactions.length + ' transaksi', pageW - margin, 31, { align: 'right' });
+      doc.text('Dicetak: ' + nowStr, pageW - margin, 22, { align: 'right' });
+      doc.text(reportTransactions.length + ' transaksi', pageW - margin, 27, { align: 'right' });
 
       // Stats Cards
       let y = 56;
@@ -373,7 +374,7 @@ export default function ReportsTab({ transactions, categories, loading }) {
           
           doc.setTextColor(255, 255, 255);
           doc.setFontSize(8);
-          doc.text('KasKu — Laporan Keuangan (lanjutan)', margin, 7);
+          doc.text('KasKu - Bhineka Djaya Primasatya — Laporan Keuangan (lanjutan)', margin, 7);
           
           y = 18;
           doc.setFillColor(26, 25, 22);
@@ -446,12 +447,12 @@ export default function ReportsTab({ transactions, categories, loading }) {
       doc.setTextColor(160, 158, 150);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text('KasKu — Dicetak pada ' + nowStr, margin, y);
+      doc.text('KasKu - Bhineka Djaya Primasatya — Dicetak pada ' + nowStr, margin, y);
 
       doc.text('Saldo: ' + formatCurrency(stats.balance), pageW - margin, y, { align: 'right' });
 
       // Save PDF
-      doc.save(`Laporan-KasKu-${periodText.replace(/ /g, '_')}.pdf`);
+      doc.save(`Laporan-KasKu-Bhineka_Djaya_Primasatya-${periodText.replace(/ /g, '_')}.pdf`);
       alert('📄 Laporan PDF berhasil diunduh!');
     } catch (err) {
       console.error('Error generating PDF report:', err);

@@ -199,7 +199,7 @@ export default function Dashboard({ session }) {
       case 'settings':
         return { title: 'Pengaturan', subtitle: 'Ubah preferensi profil dan akun' };
       default:
-        return { title: 'KasKu', subtitle: 'Catatan Keuangan Pribadi' };
+        return { title: 'KasKu - Bhineka Djaya Primasatya', subtitle: 'Catatan Keuangan Pribadi' };
     }
   };
 
