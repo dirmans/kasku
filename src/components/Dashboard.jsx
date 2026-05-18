@@ -18,6 +18,32 @@ export default function Dashboard({ session }) {
     txCount: 0
   });
 
+  // Ensure default categories are seeded for the user
+  useEffect(() => {
+    const ensureCategories = async () => {
+      if (!session?.user?.id) return;
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .limit(1);
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+          await supabase.rpc('seed_default_categories', {
+            p_user_id: session.user.id
+          });
+        }
+      } catch (err) {
+        console.error('Error ensuring default categories:', err.message);
+      }
+    };
+
+    ensureCategories();
+  }, [session]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };

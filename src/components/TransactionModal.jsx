@@ -64,7 +64,7 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
         date,
         description: description.trim(),
         category,
-        method: 'cash', // Default fallback
+        method: 'tunai', // Default fallback matching Indonesian DB schema
         note: ''
       };
 
