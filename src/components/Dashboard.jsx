@@ -23,7 +23,7 @@ export default function Dashboard({ session }) {
       return (
         <div>
           <h2 className="text-[20px] font-semibold mb-4">Ringkasan</h2>
-          <div className="grid grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             <StatCard title="Pemasukan" value={stats.income} type="income" />
             <StatCard title="Pengeluaran" value={stats.expense} type="expense" />
             <StatCard title="Sisa Saldo" value={stats.balance} type="balance" />
@@ -45,7 +45,7 @@ export default function Dashboard({ session }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className="flex flex-col md:flex-row min-h-screen bg-bg">
       <Sidebar 
         user={session?.user} 
         activeTab={activeTab} 

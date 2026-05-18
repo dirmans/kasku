@@ -8,11 +8,13 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
   ];
 
   return (
-    <aside className="w-[220px] min-w-[220px] bg-textMain text-white flex flex-col sticky top-0 h-screen overflow-y-auto">
-      <div className="p-6 pb-4 border-b border-[rgba(255,255,255,0.08)]">
-        <h1 className="font-serif text-[22px] text-white">KasKu</h1>
-        <div className="text-[11px] text-[rgba(255,255,255,0.4)] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-          {user?.email || 'user@example.com'}
+    <aside className="w-full md:w-[220px] md:min-w-[220px] bg-textMain text-white flex flex-col md:sticky md:top-0 h-auto md:h-screen overflow-y-auto">
+      <div className="p-6 pb-4 border-b border-[rgba(255,255,255,0.08)] flex justify-between items-center md:block">
+        <div>
+          <h1 className="font-serif text-[22px] text-white">KasKu</h1>
+          <div className="text-[11px] text-[rgba(255,255,255,0.4)] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+            {user?.email || 'user@example.com'}
+          </div>
         </div>
       </div>
       
