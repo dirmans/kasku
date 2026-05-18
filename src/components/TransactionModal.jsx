@@ -68,6 +68,8 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
         note: ''
       };
 
+      console.log('Mengirim payload transaksi ke Supabase:', payload);
+
       let error;
       if (transaction) {
         ({ error } = await supabase.from('transactions').update(payload).eq('id', transaction.id));
@@ -81,7 +83,8 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
       if (onSuccess) onSuccess();
       else onClose();
     } catch (err) {
-      alert('Gagal menyimpan: ' + err.message);
+      console.error('Error saat menyimpan transaksi:', err);
+      alert('Gagal menyimpan: ' + err.message + '\n\nTips: Pastikan Anda telah membuat Policy RLS untuk operasi INSERT pada tabel "transactions" di dashboard Supabase Anda (pilih policy: Enable insert for authenticated users, dengan check expression: auth.uid() = user_id).');
     } finally {
       setLoading(false);
     }
