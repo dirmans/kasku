@@ -288,7 +288,7 @@ export default function ReportsTab({ transactions, categories, loading }) {
         y += 5;
 
         const maxVal = expenseByCategory[0][1];
-        const barMaxW = contentW - 60;
+        const barMaxW = contentW - 95; // Reduced from -60 to -95 to prevent progress bar overlapping the amount text on the right
         const barColors = [
           [26, 107, 74],
           [185, 48, 48],
