@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { supabase } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import Dashboard from './components/Dashboard';
@@ -33,6 +34,7 @@ function App() {
   return (
     <>
       {!session ? <AuthScreen /> : <Dashboard session={session} />}
+      <SpeedInsights />
     </>
   );
 }
