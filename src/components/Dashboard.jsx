@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TransactionModal from './TransactionModal';
+import CategoriesTab from './CategoriesTab';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard({ session }) {
@@ -21,6 +22,23 @@ export default function Dashboard({ session }) {
     await supabase.auth.signOut();
   };
 
+  const getHeaderInfo = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return { title: 'Beranda', subtitle: 'Ringkasan aktivitas keuangan Anda' };
+      case 'transactions':
+        return { title: 'Transaksi', subtitle: 'Lihat dan kelola seluruh transaksi keuangan Anda' };
+      case 'reports':
+        return { title: 'Laporan', subtitle: 'Analisis detail pemasukan & pengeluaran Anda' };
+      case 'categories':
+        return { title: 'Kategori', subtitle: 'Kelola kategori pemasukan & pengeluaran' };
+      case 'settings':
+        return { title: 'Pengaturan', subtitle: 'Ubah preferensi profil dan akun' };
+      default:
+        return { title: 'KasKu', subtitle: 'Catatan Keuangan Pribadi' };
+    }
+  };
+
   const renderContent = () => {
     if (activeTab === 'dashboard') {
       return (
@@ -38,6 +56,10 @@ export default function Dashboard({ session }) {
           </div>
         </div>
       );
+    }
+
+    if (activeTab === 'categories') {
+      return <CategoriesTab session={session} />;
     }
     
     return (
@@ -58,8 +80,8 @@ export default function Dashboard({ session }) {
       <main className="flex-1 flex flex-col h-screen overflow-y-auto">
         <header className="bg-surface border-b border-border py-3.5 px-6 flex items-center justify-between sticky top-0 z-10">
           <div>
-            <h1 className="text-[15px] font-semibold">Beranda</h1>
-            <p className="text-[12px] text-text3 mt-0.5">Ringkasan aktivitas keuangan Anda</p>
+            <h1 className="text-[15px] font-semibold">{getHeaderInfo().title}</h1>
+            <p className="text-[12px] text-text3 mt-0.5">{getHeaderInfo().subtitle}</p>
           </div>
           <div className="flex gap-2">
             <button 
@@ -81,6 +103,11 @@ export default function Dashboard({ session }) {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         transaction={editingTransaction} 
+        session={session}
+        onSuccess={() => {
+          // TODO: Refresh transactions list
+          setIsModalOpen(false);
+        }}
       />
     </div>
   );
