@@ -1,8 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Sidebar from './Sidebar';
 import TransactionModal from './TransactionModal';
 import CategoriesTab from './CategoriesTab';
+import TransactionsTab from './TransactionsTab';
+import ReportsTab from './ReportsTab';
+import SettingsTab from './SettingsTab';
 import { supabase } from '../lib/supabase';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Dashboard({ session }) {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -96,6 +120,47 @@ export default function Dashboard({ session }) {
     fetchData();
   }, [session]);
 
+  // Group Expenses by Category for Doughnut Chart
+  const expenseByCategory = useMemo(() => {
+    const groups = {};
+    transactions.filter(t => t.type === 'pengeluaran').forEach(t => {
+      groups[t.category] = (groups[t.category] || 0) + Number(t.amount);
+    });
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
+  }, [transactions]);
+
+  // Group Monthly Cashflow Data for Bar Chart
+  const monthlyCashflow = useMemo(() => {
+    const monthlyData = {};
+    const chronologicalTx = [...transactions].reverse();
+
+    chronologicalTx.forEach(t => {
+      const date = new Date(t.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (!monthlyData[key]) {
+        monthlyData[key] = {
+          label: date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
+          income: 0,
+          expense: 0
+        };
+      }
+
+      if (t.type === 'pemasukan') {
+        monthlyData[key].income += Number(t.amount);
+      } else {
+        monthlyData[key].expense += Number(t.amount);
+      }
+    });
+
+    const sortedKeys = Object.keys(monthlyData).sort().slice(-6);
+    return {
+      labels: sortedKeys.map(k => monthlyData[k].label),
+      income: sortedKeys.map(k => monthlyData[k].income),
+      expense: sortedKeys.map(k => monthlyData[k].expense)
+    };
+  }, [transactions]);
+
   const handleDeleteTransaction = async (id) => {
     if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return;
     try {
@@ -166,6 +231,83 @@ export default function Dashboard({ session }) {
               <StatCard title="Pengeluaran" value={stats.expense} type="expense" />
               <StatCard title="Sisa Saldo" value={stats.balance} type="balance" />
               <StatCard title="Total Transaksi" value={stats.txCount} type="txcount" />
+            </div>
+          </div>
+
+          {/* Charts Visualization Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Cashflow Trends (Large Column) */}
+            <div className="bg-surface rounded-xl border border-border p-5 shadow-sm md:col-span-2">
+              <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">Tren Arus Kas Bulanan</h3>
+              <div className="h-[240px]">
+                {loading ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-border border-t-textMain rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <Bar 
+                    data={{
+                      labels: monthlyCashflow.labels.length ? monthlyCashflow.labels : ['Belum ada data'],
+                      datasets: [
+                        {
+                          label: '📈 Pemasukan',
+                          data: monthlyCashflow.income.length ? monthlyCashflow.income : [0],
+                          backgroundColor: '#1a6b4a',
+                          borderRadius: 6,
+                        },
+                        {
+                          label: '📉 Pengeluaran',
+                          data: monthlyCashflow.expense.length ? monthlyCashflow.expense : [0],
+                          backgroundColor: '#b93030',
+                          borderRadius: 6,
+                        }
+                      ]
+                    }} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 } } }
+                      }
+                    }} 
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Category Breakdown (Small Column) */}
+            <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
+              <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">Pengeluaran</h3>
+              <div className="h-[240px] flex items-center justify-center">
+                {loading ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-border border-t-textMain rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <Doughnut 
+                    data={{
+                      labels: expenseByCategory.map(([name]) => name).length ? expenseByCategory.map(([name]) => name) : ['Tidak Ada Pengeluaran'],
+                      datasets: [
+                        {
+                          data: expenseByCategory.map(([, val]) => val).length ? expenseByCategory.map(([, val]) => val) : [1],
+                          backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', 
+                            '#ec4899', '#14b8a6', '#f43f5e', '#64748b'
+                          ].slice(0, Math.max(1, expenseByCategory.length)),
+                          borderWidth: 1,
+                        }
+                      ]
+                    }} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                      }
+                    }} 
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -267,16 +409,32 @@ export default function Dashboard({ session }) {
 
     if (activeTab === 'transactions') {
       return (
-        <div className="bg-surface rounded-xl border border-border p-5 shadow-sm text-center">
-          <h3 className="font-bold text-[15px] text-textMain mb-2">Riwayat Transaksi Lengkap</h3>
-          <p className="text-text3 text-[13px] mb-4">Halaman riwayat lengkap sedang dalam migrasi. Anda dapat melihat dan mengedit 5 transaksi terbaru langsung dari Beranda.</p>
-          <button 
-            onClick={() => setActiveTab('dashboard')} 
-            className="px-4 py-2 border border-border rounded-lg bg-transparent text-textMain text-[13px] font-medium hover:bg-surface2"
-          >
-            Kembali ke Beranda
-          </button>
-        </div>
+        <TransactionsTab 
+          transactions={transactions}
+          categories={categories}
+          loading={loading}
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+        />
+      );
+    }
+
+    if (activeTab === 'reports') {
+      return (
+        <ReportsTab 
+          transactions={transactions}
+          categories={categories}
+          loading={loading}
+        />
+      );
+    }
+
+    if (activeTab === 'settings') {
+      return (
+        <SettingsTab 
+          session={session}
+          onReset={fetchData}
+        />
       );
     }
     
