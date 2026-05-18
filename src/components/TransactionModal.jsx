@@ -69,13 +69,15 @@ export default function TransactionModal({ isOpen, onClose, transaction }) {
               <div>
                 <label className="block text-[12px] font-semibold text-text2 mb-[6px] uppercase tracking-[0.4px]">Jumlah (Rp)</label>
                 <input 
-                  type="number" 
+                  type="text" 
                   className="w-full p-[10px_14px] border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none transition-colors focus:border-textMain focus:bg-surface"
                   placeholder="0" 
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={amount ? new Intl.NumberFormat('id-ID').format(amount) : ''}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/\D/g, '');
+                    setAmount(rawValue ? parseInt(rawValue, 10) : '');
+                  }}
                   required
-                  min="0"
                 />
               </div>
               <div>
