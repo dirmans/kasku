@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 const POPULAR_EMOJIS = [
   '🍔', '🚗', '🛍️', '🏠', '🔌', '🏥', '🎓', '✈️', '🎮', '🍿', 
-  '💰', '📈', '💼', '🎁', '🛒', '☕', '💅', '🏋️', '📚', '🐱',
+  '💼', '🎁', '🛒', '☕', '💅', '🏋️', '📚', '🐱',
   '💰', '💵', '💳', '📊', '🏦', '🪙', '💎', '📈', '🚀', '🤝'
 ];
 
@@ -20,6 +20,7 @@ export default function CategoriesTab({ session }) {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const fetchCategories = async () => {
+    if (!session?.user?.id) return;
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -32,6 +33,7 @@ export default function CategoriesTab({ session }) {
       setCategories(data || []);
     } catch (err) {
       console.error('Error fetching categories:', err.message);
+      alert('Gagal mengambil data kategori: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -43,19 +45,22 @@ export default function CategoriesTab({ session }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!session?.user?.id) {
+      alert('Sesi tidak valid. Silakan masuk kembali.');
+      return;
+    }
     if (!name.trim()) return alert('Nama kategori harus diisi');
 
     setSubmitting(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('categories')
         .insert({
           user_id: session.user.id,
           name: name.trim(),
           type: formType,
           emoji
-        })
-        .select();
+        });
 
       if (error) throw error;
 
@@ -64,6 +69,7 @@ export default function CategoriesTab({ session }) {
       setShowAddForm(false);
       fetchCategories();
     } catch (err) {
+      console.error('Error adding category:', err);
       alert('Gagal menambahkan kategori: ' + err.message);
     } finally {
       setSubmitting(false);
