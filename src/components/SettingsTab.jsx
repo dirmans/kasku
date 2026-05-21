@@ -8,7 +8,7 @@ export default function SettingsTab({ session, onReset }) {
   const [resetLoading, setResetLoading] = useState(false);
 
   const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const isAuthorized = isLocal;
+  const isAuthorized = true;
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();

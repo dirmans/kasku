@@ -9,7 +9,7 @@ const POPULAR_EMOJIS = [
 
 export default function CategoriesTab({ session }) {
   const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const isAuthorized = isLocal;
+  const isAuthorized = true;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState('pengeluaran'); // 'pemasukan' or 'pengeluaran'
