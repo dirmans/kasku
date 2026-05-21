@@ -4,6 +4,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
     { id: 'transactions', label: 'Transaksi', icon: '💸' },
     { id: 'reports', label: 'Laporan', icon: '📈' },
     { id: 'categories', label: 'Kategori', icon: '📑' },
+    { id: 'capital', label: 'Rekap Modal', icon: '📦' },
     { id: 'settings', label: 'Pengaturan', icon: '⚙️' },
   ];
 

@@ -4,6 +4,7 @@ import TransactionModal from './TransactionModal';
 import CategoriesTab from './CategoriesTab';
 import TransactionsTab from './TransactionsTab';
 import ReportsTab from './ReportsTab';
+import CapitalTab from './CapitalTab';
 import SettingsTab from './SettingsTab';
 import { supabase } from '../lib/supabase';
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -195,6 +196,8 @@ export default function Dashboard({ session }) {
         return { title: 'Laporan', subtitle: 'Analisis detail pemasukan & pengeluaran Anda' };
       case 'categories':
         return { title: 'Kategori', subtitle: 'Kelola kategori pemasukan & pengeluaran' };
+      case 'capital':
+        return { title: 'Rekap Modal', subtitle: 'Lacak inventaris, harga modal, dan profit' };
       case 'settings':
         return { title: 'Pengaturan', subtitle: 'Ubah preferensi profil dan akun' };
       default:
@@ -429,6 +432,10 @@ export default function Dashboard({ session }) {
           loading={loading}
         />
       );
+    }
+
+    if (activeTab === 'capital') {
+      return <CapitalTab session={session} />;
     }
 
     if (activeTab === 'settings') {
