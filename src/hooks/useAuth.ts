@@ -7,18 +7,47 @@ export function useAuth() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    let active = true;
+
+    // Set a safety timeout to ensure the app doesn't hang on the loading spinner forever
+    const safetyTimeout = setTimeout(() => {
+      if (active) {
+        console.warn('Auth session initialization timed out. Forcing loading to false.');
+        setLoading(false);
+      }
+    }, 4000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (active) {
+          setSession(session);
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting session:', error);
+      })
+      .finally(() => {
+        if (active) {
+          clearTimeout(safetyTimeout);
+          setLoading(false);
+        }
+      });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      if (active) {
+        setSession(session);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
