@@ -1,28 +1,10 @@
-import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
-import AuthScreen from './components/AuthScreen';
-import Dashboard from './components/Dashboard';
-
 import { Toaster } from 'react-hot-toast';
+import { useAuth } from './hooks/useAuth';
+import AuthScreen from './pages/AuthScreen';
+import Dashboard from './pages/Dashboard';
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -34,7 +16,7 @@ function App() {
 
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
@@ -45,7 +27,7 @@ function App() {
             borderRadius: '8px',
             border: '1px solid #e0e0e0',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          }
+          },
         }}
       />
       {!session ? <AuthScreen /> : <Dashboard session={session} />}

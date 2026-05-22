@@ -1,0 +1,64 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bubbleGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF7A00"/>
+      <stop offset="100%" stop-color="#0066FF"/>
+    </linearGradient>
+
+    <linearGradient id="textGradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF7A00"/>
+      <stop offset="100%" stop-color="#0066FF"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Chat Bubble -->
+  <path
+    d="M110 90C110 67.9 127.9 50 150 50H362C384.1 50 402 67.9 402 90V250C402 272.1 384.1 290 362 290H245L190 345V290H150C127.9 290 110 272.1 110 250V90Z"
+    fill="url(#bubbleGradient)"
+    filter="url(#shadow)"
+  />
+
+  <!-- Letter K -->
+  <path
+    d="M185 115H225V175L285 115H335L268 188L340 265H287L225 199V265H185V115Z"
+    fill="white"
+  />
+
+  <!-- Small Shopping Bag -->
+  <g transform="translate(135,75)">
+    <rect x="0" y="15" width="38" height="32" rx="6" fill="#FFD54F"/>
+    <path d="M10 15C10 8 14 3 19 3C24 3 28 8 28 15" stroke="#FFF" stroke-width="4"/>
+  </g>
+
+  <!-- Chat Dots -->
+  <g transform="translate(315,80)">
+    <rect x="0" y="0" width="52" height="34" rx="17" fill="white"/>
+    <circle cx="16" cy="17" r="3.5" fill="#FF7A00"/>
+    <circle cx="26" cy="17" r="3.5" fill="#FF7A00"/>
+    <circle cx="36" cy="17" r="3.5" fill="#FF7A00"/>
+  </g>
+
+  <!-- Spark -->
+  <path
+    d="M410 70L417 87L434 94L417 101L410 118L403 101L386 94L403 87L410 70Z"
+    fill="#FFD54F"
+  />
+
+  <!-- Brand Text -->
+  <text
+    x="256"
+    y="445"
+    text-anchor="middle"
+    font-family="Poppins, Arial, sans-serif"
+    font-size="72"
+    font-weight="800"
+    fill="url(#textGradient)"
+    letter-spacing="2"
+  >
+    KASKU
+  </text>
+</svg>

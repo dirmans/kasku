@@ -1,0 +1,15 @@
+echo "🔍 Menjalankan pengecekan kode (Biome)..."
+if ! npm run check; then
+  echo "❌ GAGAL: Pengecekan kode (Biome) tidak lolos!"
+  echo "👉 Silakan perbaiki peringatan atau error di atas sebelum melakukan commit."
+  exit 1
+fi
+
+echo "🏗️  Menjalankan proses build..."
+if ! npm run build; then
+  echo "❌ GAGAL: Build project tidak berhasil!"
+  echo "👉 Silakan perbaiki error kompilasi/TypeScript di atas sebelum melakukan commit."
+  exit 1
+fi
+
+echo "✅ Semua pengecekan berhasil. Melanjutkan commit..."

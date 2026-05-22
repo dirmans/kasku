@@ -1,4 +1,13 @@
-export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
+import type { User } from '../../types';
+
+interface SidebarProps {
+  user: User | null;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  onLogout: () => void;
+}
+
+export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dasbor', icon: '📊' },
     { id: 'transactions', label: 'Transaksi', icon: '💸' },
@@ -23,19 +32,20 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
             </div>
           </div>
         </div>
-        
+
         <div className="p-3.5 px-2.5 flex-1">
           <div className="text-[10px] uppercase tracking-[1px] text-[rgba(255,255,255,0.3)] font-semibold py-2 px-2.5">
             Menu Utama
           </div>
-          {navItems.map(item => (
+          {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg text-[13.5px] mb-0.5 text-left transition-colors
-                ${activeTab === item.id 
-                  ? 'bg-[rgba(255,255,255,0.12)] text-white font-medium' 
-                  : 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white'
+                ${
+                  activeTab === item.id
+                    ? 'bg-[rgba(255,255,255,0.12)] text-white font-medium'
+                    : 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white'
                 }`}
             >
               <span className="opacity-80">{item.icon}</span>
@@ -57,7 +67,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 flex justify-between items-center px-1 pb-1 pt-1 overflow-x-auto hide-scrollbar">
-        {navItems.map(item => (
+        {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
@@ -65,7 +75,11 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
               activeTab === item.id ? 'text-textMain' : 'text-text3 hover:text-text2'
             }`}
           >
-            <span className={`text-[18px] mb-1 ${activeTab === item.id ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`}>{item.icon}</span>
+            <span
+              className={`text-[18px] mb-1 ${activeTab === item.id ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`}
+            >
+              {item.icon}
+            </span>
             <span className="text-[9px] font-semibold tracking-tight">{item.label}</span>
           </button>
         ))}

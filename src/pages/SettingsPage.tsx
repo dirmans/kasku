@@ -1,17 +1,30 @@
-import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { type FormEvent, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
+import { useCategories } from '../hooks/useCategories';
+import { useTransactions } from '../hooks/useTransactions';
+import type { Session } from '../types';
 
-export default function SettingsTab({ session, onReset }) {
+interface SettingsTabProps {
+  session: Session | null;
+  onReset?: () => void;
+}
+
+export default function SettingsTab({ session, onReset }: SettingsTabProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
-  const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isLocal =
+    import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isAuthorized = true;
 
-  const handleUpdatePassword = async (e) => {
+  const { updatePassword } = useAuth();
+  const { deleteAllTransactions } = useTransactions(session);
+  const { deleteAllCategories } = useCategories(session);
+
+  const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault();
     if (!password) return toast.error('Kata sandi tidak boleh kosong');
     if (password.length < 6) return toast.error('Kata sandi harus minimal 6 karakter');
@@ -19,14 +32,15 @@ export default function SettingsTab({ session, onReset }) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await updatePassword(password);
       if (error) throw error;
-      
+
       toast.success('Kata sandi berhasil diperbarui!');
       setPassword('');
       setConfirmPassword('');
-    } catch (err) {
-      toast.error('Gagal memperbarui kata sandi: ' + err.message);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(`Gagal memperbarui kata sandi: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -34,42 +48,28 @@ export default function SettingsTab({ session, onReset }) {
 
   const handleResetData = async () => {
     const doubleCheck = confirm(
-      '⚠️ PERINGATAN KRITIS: Tindakan ini akan menghapus SELURUH transaksi dan kategori kustom Anda secara permanen dari server.\n\nApakah Anda yakin ingin melanjutkan reset total?'
+      '⚠️ PERINGATAN KRITIS: Tindakan ini akan menghapus SELURUH transaksi dan kategori kustom Anda secara permanen dari server.\n\nApakah Anda yakin ingin melanjutkan reset total?',
     );
     if (!doubleCheck) return;
 
     const finalCheck = confirm(
-      'Konfirmasi Terakhir: Data Anda tidak dapat dikembalikan setelah proses ini selesai. Ketik "OK" jika Anda benar-benar yakin.'
+      'Konfirmasi Terakhir: Data Anda tidak dapat dikembalikan setelah proses ini selesai. Ketik "OK" jika Anda benar-benar yakin.',
     );
     if (!finalCheck) return;
 
     setResetLoading(true);
     try {
       // 1. Delete all transactions
-      const { error: txErr } = await supabase
-        .from('transactions')
-        .delete();
-      
-      if (txErr) throw txErr;
+      await deleteAllTransactions();
 
-      // 2. Delete all categories
-      const { error: catErr } = await supabase
-        .from('categories')
-        .delete();
-      
-      if (catErr) throw catErr;
-
-      // 3. Call RPC to re-seed default categories
-      const { error: seedErr } = await supabase.rpc('seed_default_categories', {
-        p_user_id: session.user.id
-      });
-
-      if (seedErr) throw seedErr;
+      // 2. Delete all categories & re-seed
+      await deleteAllCategories();
 
       toast.success('Seluruh data berhasil dihapus dan kategori default telah disemai ulang!');
       if (onReset) onReset();
-    } catch (err) {
-      toast.error('Gagal melakukan reset data: ' + err.message);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(`Gagal melakukan reset data: ${err.message}`);
     } finally {
       setResetLoading(false);
     }
@@ -94,12 +94,14 @@ export default function SettingsTab({ session, onReset }) {
       {/* Security Form */}
       <div className="bg-surface rounded-xl border border-border p-5 shadow-sm space-y-4">
         <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px]">Ubah Kata Sandi</h3>
-        
+
         <form onSubmit={handleUpdatePassword} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">Kata Sandi Baru</label>
-              <input 
+              <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+                Kata Sandi Baru
+              </label>
+              <input
                 type="password"
                 placeholder="Minimal 6 karakter..."
                 value={password}
@@ -108,10 +110,12 @@ export default function SettingsTab({ session, onReset }) {
                 required
               />
             </div>
-            
+
             <div>
-              <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">Konfirmasi Kata Sandi</label>
-              <input 
+              <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+                Konfirmasi Kata Sandi
+              </label>
+              <input
                 type="password"
                 placeholder="Ulangi kata sandi..."
                 value={confirmPassword}
@@ -137,7 +141,8 @@ export default function SettingsTab({ session, onReset }) {
         <div className="bg-surface rounded-xl border border-red-200 p-5 shadow-sm space-y-4">
           <h3 className="font-bold text-[14px] text-red-600 uppercase tracking-[0.6px]">⚠️ Zona Bahaya</h3>
           <p className="text-[12.5px] text-text3">
-            Jika Anda mengalami masalah dengan database Anda atau ingin memulai dari awal lagi, Anda dapat melakukan reset total di bawah ini. Tindakan ini akan menghapus semua transaksi dan kategori Anda selamanya.
+            Jika Anda mengalami masalah dengan database Anda atau ingin memulai dari awal lagi, Anda dapat melakukan
+            reset total di bawah ini. Tindakan ini akan menghapus semua transaksi dan kategori Anda selamanya.
           </p>
 
           <div>
