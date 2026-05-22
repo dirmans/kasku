@@ -13,6 +13,13 @@ import { formatCurrency } from '../utils/formatters';
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
+interface ExpenseCategoryRow {
+  category: string;
+  amount: number;
+  percentage: number;
+  methods: Record<string, number>;
+}
+
 export default function ReportsPage() {
   const { transactions, loading } = useAppContext();
   const [period, setPeriod] = useState('all');
@@ -54,18 +61,25 @@ export default function ReportsPage() {
     };
   }, [reportTransactions]);
 
-  const expenseByCategory = useMemo(() => {
-    const groups: Record<string, number> = {};
+  const expenseByCategory = useMemo<ExpenseCategoryRow[]>(() => {
+    const groups: Record<string, { total: number; methods: Record<string, number> }> = {};
     reportTransactions
       .filter((t) => t.type === 'pengeluaran')
       .forEach((t) => {
-        groups[t.category] = (groups[t.category] || 0) + Number(t.amount);
+        const cat = t.category;
+        const method = t.method || 'Tunai';
+        if (!groups[cat]) {
+          groups[cat] = { total: 0, methods: {} };
+        }
+        groups[cat].total += Number(t.amount);
+        groups[cat].methods[method] = (groups[cat].methods[method] || 0) + Number(t.amount);
       });
-    const total = Object.values(groups).reduce((a, b) => a + b, 0);
-    return Object.entries(groups).map(([category, amount]) => ({
+    const total = Object.values(groups).reduce((a, b) => a + b.total, 0);
+    return Object.entries(groups).map(([category, data]) => ({
       category,
-      amount,
-      percentage: total > 0 ? (amount / total) * 100 : 0,
+      amount: data.total,
+      percentage: total > 0 ? (data.total / total) * 100 : 0,
+      methods: data.methods,
     }));
   }, [reportTransactions]);
 
@@ -196,11 +210,19 @@ export default function ReportsPage() {
       tooltip: {
         callbacks: {
           label: (context: import('chart.js').TooltipItem<'doughnut'>) => {
-            const val = context.raw as number;
-            if (expenseByCategory.length === 0) return ' 0%';
+            const idx = context.dataIndex;
+            const item = expenseByCategory[idx];
+            if (!item) return '';
             const total = expenseByCategory.reduce((a, d) => a + d.amount, 0);
-            const pct = ((val / total) * 100).toFixed(1);
-            return ` ${context.label}: ${formatCurrency(val)} (${pct}%)`;
+            const pct = ((item.amount / total) * 100).toFixed(1);
+
+            const lines = [` ${item.category}: ${formatCurrency(item.amount)} (${pct}%)`];
+
+            Object.entries(item.methods).forEach(([method, amt]) => {
+              lines.push(`   • ${method}: ${formatCurrency(amt)}`);
+            });
+
+            return lines;
           },
         },
       },
@@ -232,7 +254,7 @@ export default function ReportsPage() {
       const margin = 18;
       const contentW = 210 - margin * 2;
 
-      // Header Banner
+      // Header Banner on first page
       doc.setFillColor(26, 25, 22);
       doc.rect(0, 0, pageW, 44, 'F');
 
@@ -308,6 +330,251 @@ export default function ReportsPage() {
 
       y += 30;
 
+      // X coordinates for transaction details table columns
+      const colX = {
+        date: margin + 2, // Date column
+        desc: margin + 22, // Description column
+        cat: margin + 88, // Category column
+        method: margin + 120, // Payment method column
+        amount: margin + contentW - 2, // Amount column (align: right)
+      };
+
+      // Function to draw table header for transactions
+      const drawTransactionHeader = (yPos: number) => {
+        doc.setFillColor(245, 245, 240);
+        doc.rect(margin, yPos, contentW, 6, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+
+        doc.text('Tanggal', colX.date, yPos + 4);
+        doc.text('Deskripsi', colX.desc, yPos + 4);
+        doc.text('Kategori', colX.cat, yPos + 4);
+        doc.text('Jenis Kas', colX.method, yPos + 4);
+        doc.text('Jumlah', colX.amount, yPos + 4, { align: 'right' });
+      };
+
+      // Helper to handle pagination safely
+      const checkPageLimit = (neededSpace: number, isTransactionTable = false) => {
+        if (y + neededSpace > 280) {
+          doc.addPage();
+          y = 20;
+          if (isTransactionTable) {
+            drawTransactionHeader(y);
+            y += 6;
+          }
+          return true;
+        }
+        return false;
+      };
+
+      // 1. Sisa Saldo per Jenis Kas
+      checkPageLimit(35);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(26, 25, 22);
+      doc.text('Sisa Saldo per Jenis Kas', margin, y);
+      y += 5;
+
+      // Table Header for Saldo
+      doc.setFillColor(245, 245, 240);
+      doc.rect(margin, y, contentW, 6, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(50, 50, 50);
+      doc.text('Jenis Kas', margin + 4, y + 4);
+      doc.text('Sisa Saldo', margin + contentW - 4, y + 4, { align: 'right' });
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      balanceByPaymentMethod.forEach((item, idx) => {
+        checkPageLimit(6);
+        if (idx % 2 === 0) {
+          doc.setFillColor(252, 252, 250);
+          doc.rect(margin, y, contentW, 6, 'F');
+        }
+        doc.setDrawColor(230, 230, 225);
+        doc.setLineWidth(0.1);
+        doc.line(margin, y, margin + contentW, y);
+        doc.text(item.method, margin + 4, y + 4.2);
+
+        if (item.amount >= 0) {
+          doc.setTextColor(26, 107, 74);
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setTextColor(185, 48, 48);
+          doc.setFont('helvetica', 'bold');
+        }
+        doc.text(formatCurrency(item.amount), margin + contentW - 4, y + 4.2, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
+        y += 6;
+      });
+      doc.setDrawColor(230, 230, 225);
+      doc.line(margin, y, margin + contentW, y); // closing line
+      y += 10;
+
+      // 2. Rincian Pengeluaran per Kategori
+      checkPageLimit(40);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(26, 25, 22);
+      doc.text('Rincian Pengeluaran per Kategori', margin, y);
+      y += 5;
+
+      // Table Header for Expense
+      doc.setFillColor(245, 245, 240);
+      doc.rect(margin, y, contentW, 6, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(50, 50, 50);
+      doc.text('Kategori', margin + 4, y + 4);
+      doc.text('Total Pengeluaran', margin + contentW - 35, y + 4, { align: 'right' });
+      doc.text('Persentase', margin + contentW - 4, y + 4, { align: 'right' });
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      if (expenseByCategory.length === 0) {
+        checkPageLimit(6);
+        doc.setDrawColor(230, 230, 225);
+        doc.setLineWidth(0.1);
+        doc.line(margin, y, margin + contentW, y);
+        doc.text('Belum ada catatan pengeluaran pada periode ini.', margin + 4, y + 4.2);
+        y += 6;
+      } else {
+        expenseByCategory.forEach((item, idx) => {
+          checkPageLimit(9); // Need 9mm for stacked row info (Category + Method details)
+          if (idx % 2 === 0) {
+            doc.setFillColor(252, 252, 250);
+            doc.rect(margin, y, contentW, 9, 'F');
+          }
+          doc.setDrawColor(230, 230, 225);
+          doc.setLineWidth(0.1);
+          doc.line(margin, y, margin + contentW, y);
+
+          // Category name
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.setFontSize(8);
+          doc.text(item.category, margin + 4, y + 3.8);
+
+          // Sub-details for cash sources
+          const methodDetails = Object.entries(item.methods)
+            .map(([method, amt]) => `${method}: ${formatCurrency(amt)}`)
+            .join(' | ');
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6.5);
+          doc.setTextColor(120, 120, 120);
+          doc.text(methodDetails, margin + 4, y + 7.5);
+
+          // Total amount
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(185, 48, 48);
+          doc.text(formatCurrency(item.amount), margin + contentW - 35, y + 5.5, { align: 'right' });
+
+          // Percentage
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(80, 80, 80);
+          doc.text(`${item.percentage.toFixed(1)}%`, margin + contentW - 4, y + 5.5, { align: 'right' });
+          y += 9;
+        });
+      }
+      doc.setDrawColor(230, 230, 225);
+      doc.line(margin, y, margin + contentW, y); // closing line
+      y += 10;
+
+      // 3. Daftar Transaksi Detail
+      checkPageLimit(40);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(26, 25, 22);
+      doc.text('Daftar Transaksi Detail', margin, y);
+      y += 5;
+
+      // Table Header for Transactions
+      drawTransactionHeader(y);
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      if (reportTransactions.length === 0) {
+        checkPageLimit(6, true);
+        doc.setTextColor(80, 80, 80);
+        doc.setDrawColor(230, 230, 225);
+        doc.setLineWidth(0.1);
+        doc.line(margin, y, margin + contentW, y);
+        doc.text('Tidak ada transaksi pada periode ini.', margin + 2, y + 4.2);
+        y += 6;
+      } else {
+        reportTransactions.forEach((tx, idx) => {
+          checkPageLimit(6, true);
+
+          // Zebra striping background
+          if (idx % 2 === 0) {
+            doc.setFillColor(252, 252, 250);
+            doc.rect(margin, y, contentW, 6, 'F');
+          }
+
+          doc.setTextColor(80, 80, 80);
+          doc.setFontSize(7.5);
+          doc.setFont('helvetica', 'normal');
+
+          doc.setDrawColor(230, 230, 225);
+          doc.setLineWidth(0.1);
+          doc.line(margin, y, margin + contentW, y);
+
+          const dateStr = new Date(tx.date).toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+
+          let descStr = tx.description || '-';
+          if (descStr.length > 40) {
+            descStr = `${descStr.substring(0, 37)}...`;
+          }
+
+          const amountStr = (tx.type === 'pemasukan' ? '+' : '-') + formatCurrency(tx.amount);
+
+          doc.text(dateStr, colX.date, y + 4.2);
+          doc.text(descStr, colX.desc, y + 4.2);
+          doc.text(tx.category || '-', colX.cat, y + 4.2);
+          doc.text(tx.method || 'Tunai', colX.method, y + 4.2);
+
+          // Color amount cell
+          if (tx.type === 'pemasukan') {
+            doc.setTextColor(26, 107, 74);
+            doc.setFont('helvetica', 'bold');
+          } else {
+            doc.setTextColor(185, 48, 48);
+            doc.setFont('helvetica', 'bold');
+          }
+          doc.text(amountStr, colX.amount, y + 4.2, { align: 'right' });
+          y += 6;
+        });
+      }
+      doc.setTextColor(80, 80, 80);
+      doc.setDrawColor(230, 230, 225);
+      doc.setLineWidth(0.1);
+      doc.line(margin, y, margin + contentW, y); // closing line
+
+      // Add Page Numbers and Footer on all pages
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.setDrawColor(220, 220, 215);
+        doc.setLineWidth(0.1);
+        doc.line(margin, 282, margin + contentW, 282); // divider line above footer
+
+        doc.text(`Halaman ${i} dari ${totalPages}`, margin, 287);
+        doc.text('KasKu - Laporan Keuangan Bhineka Djaya Primasatya', margin + contentW, 287, { align: 'right' });
+      }
+
       // Save PDF
       doc.save(
         `Laporan-KasKu-Bhineka_Djaya_Primasatya-${(periodText[period] || 'Semua_Waktu').replace(/ /g, '_')}.pdf`,
@@ -320,8 +587,24 @@ export default function ReportsPage() {
     }
   };
 
-  const expenseColumns: Column<{ category: string; amount: number; percentage: number }>[] = [
+  const expenseColumns: Column<ExpenseCategoryRow>[] = [
     { key: 'category', label: 'Kategori', sortable: true },
+    {
+      key: 'methods',
+      label: 'Sumber Kas / Detail',
+      render: (r) => (
+        <div className="flex flex-wrap gap-1">
+          {Object.entries(r.methods).map(([method, amt]) => (
+            <span
+              key={method}
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-textMain border border-border"
+            >
+              {method}: <span className="font-semibold ml-1">{formatCurrency(amt)}</span>
+            </span>
+          ))}
+        </div>
+      ),
+    },
     {
       key: 'amount',
       label: 'Total Pengeluaran',
@@ -439,12 +722,24 @@ export default function ReportsPage() {
           const total = expenseByCategory.reduce((a, d) => a + d.amount, 0);
           const pct = ((r.amount / total) * 100).toFixed(1);
           return (
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-textMain text-[14px]">{r.category}</div>
-                <div className="text-[11.5px] text-text3 mt-0.5">Persentase: {pct}%</div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-textMain text-[14px]">{r.category}</div>
+                  <div className="text-[11.5px] text-text3 mt-0.5">Persentase: {pct}%</div>
+                </div>
+                <div className="font-bold text-[14px] text-expense font-[tnum]">{formatCurrency(r.amount)}</div>
               </div>
-              <div className="font-bold text-[14px] text-expense font-[tnum]">{formatCurrency(r.amount)}</div>
+              <div className="flex flex-wrap gap-1 pt-1.5 border-t border-dashed border-border">
+                {Object.entries(r.methods).map(([method, amt]) => (
+                  <span
+                    key={method}
+                    className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted text-[10.5px] text-text2"
+                  >
+                    {method}: <span className="font-medium ml-1">{formatCurrency(amt)}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           );
         }}

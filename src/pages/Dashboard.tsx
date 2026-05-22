@@ -10,6 +10,12 @@ import { formatCurrency } from '../utils/formatters';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
+interface DashboardExpenseRow {
+  category: string;
+  amount: number;
+  methods: Record<string, number>;
+}
+
 export default function Dashboard() {
   const { transactions, categories, paymentMethods, loading, openTransactionModal, handleDeleteTransaction } =
     useAppContext();
@@ -41,15 +47,27 @@ export default function Dashboard() {
     return Object.entries(groups).sort((a, b) => b[1] - a[1]);
   }, [transactions]);
 
-  // Group Expenses by Category for Doughnut Chart
-  const expenseByCategory = useMemo(() => {
-    const groups: Record<string, number> = {};
+  // Group Expenses by Category for Doughnut Chart with method breakdown
+  const expenseByCategory = useMemo<DashboardExpenseRow[]>(() => {
+    const groups: Record<string, { total: number; methods: Record<string, number> }> = {};
     transactions
       .filter((t) => t.type === 'pengeluaran')
       .forEach((t) => {
-        groups[t.category] = (groups[t.category] || 0) + Number(t.amount);
+        const cat = t.category;
+        const method = t.method || 'Tunai';
+        if (!groups[cat]) {
+          groups[cat] = { total: 0, methods: {} };
+        }
+        groups[cat].total += Number(t.amount);
+        groups[cat].methods[method] = (groups[cat].methods[method] || 0) + Number(t.amount);
       });
-    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
+    return Object.entries(groups)
+      .map(([category, data]) => ({
+        category,
+        amount: data.total,
+        methods: data.methods,
+      }))
+      .sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 
   // Group Monthly Cashflow Data for Bar Chart
@@ -167,13 +185,13 @@ export default function Dashboard() {
             ) : (
               <Doughnut
                 data={{
-                  labels: expenseByCategory.map(([name]) => name).length
-                    ? expenseByCategory.map(([name]) => name)
+                  labels: expenseByCategory.map((d) => d.category).length
+                    ? expenseByCategory.map((d) => d.category)
                     : ['Tidak Ada Pengeluaran'],
                   datasets: [
                     {
-                      data: expenseByCategory.map(([, val]) => val).length
-                        ? expenseByCategory.map(([, val]) => val)
+                      data: expenseByCategory.map((d) => d.amount).length
+                        ? expenseByCategory.map((d) => d.amount)
                         : [1],
                       backgroundColor: [
                         '#3b82f6',
@@ -197,6 +215,25 @@ export default function Dashboard() {
                     legend: {
                       position: 'bottom',
                       labels: { boxWidth: 10, font: { size: 10 } },
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: (context: import('chart.js').TooltipItem<'doughnut'>) => {
+                          const idx = context.dataIndex;
+                          const item = expenseByCategory[idx];
+                          if (!item) return '';
+                          const total = expenseByCategory.reduce((a, d) => a + d.amount, 0);
+                          const pct = ((item.amount / total) * 100).toFixed(1);
+
+                          const lines = [` ${item.category}: ${formatCurrency(item.amount)} (${pct}%)`];
+
+                          Object.entries(item.methods).forEach(([method, amt]) => {
+                            lines.push(`   • ${method}: ${formatCurrency(amt)}`);
+                          });
+
+                          return lines;
+                        },
+                      },
                     },
                   },
                 }}
