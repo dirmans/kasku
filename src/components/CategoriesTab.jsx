@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 const POPULAR_EMOJIS = [
   '🍔', '🚗', '🛍️', '🏠', '🔌', '🏥', '🎓', '✈️', '🎮', '🍿', 
@@ -42,8 +43,8 @@ export default function CategoriesTab({ session, transactions = [] }) {
       if (error) throw error;
       setCategories(data || []);
     } catch (err) {
-      console.error('Error fetching categories:', err.message);
-      alert('Gagal mengambil data kategori: ' + err.message);
+      console.error('Error fetching categories:', err);
+      toast.error('Gagal mengambil data kategori: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -56,10 +57,13 @@ export default function CategoriesTab({ session, transactions = [] }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!session?.user?.id) {
-      alert('Sesi tidak valid. Silakan masuk kembali.');
+      toast.error('Sesi tidak valid. Silakan masuk kembali.');
       return;
     }
-    if (!name.trim()) return alert('Nama kategori harus diisi');
+    if (!name.trim()) {
+      toast.error('Nama kategori harus diisi');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -74,13 +78,13 @@ export default function CategoriesTab({ session, transactions = [] }) {
 
       if (error) throw error;
 
-      alert('Kategori berhasil ditambahkan!');
+      toast.success('Kategori berhasil ditambahkan!');
       setName('');
       setShowAddForm(false);
       fetchCategories();
     } catch (err) {
       console.error('Error adding category:', err);
-      alert('Gagal menambahkan kategori: ' + err.message);
+      toast.error('Gagal menambahkan kategori: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -96,10 +100,10 @@ export default function CategoriesTab({ session, transactions = [] }) {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Kategori berhasil dihapus!');
+      toast.success('Kategori berhasil dihapus!');
       fetchCategories();
     } catch (err) {
-      alert('Gagal menghapus kategori: ' + err.message);
+      toast.error('Gagal menghapus kategori: ' + err.message);
     }
   };
 

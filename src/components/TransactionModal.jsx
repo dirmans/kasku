@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 export default function TransactionModal({ isOpen, onClose, transaction, session, onSuccess }) {
   const [type, setType] = useState('pengeluaran'); // 'pemasukan' or 'pengeluaran'
@@ -52,7 +53,7 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!amount || amount <= 0) return alert('Jumlah harus diisi');
+    if (!amount || amount <= 0) return toast.error('Jumlah harus diisi');
     
     setLoading(true);
     try {
@@ -78,12 +79,12 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
 
       if (error) throw error;
       
-      alert('Transaksi berhasil disimpan!');
+      toast.success('Transaksi berhasil disimpan!');
       if (onSuccess) onSuccess();
       else onClose();
     } catch (err) {
-      console.error('Error saat menyimpan transaksi:', err);
-      alert('Gagal menyimpan: ' + err.message + '\n\nTips: Pastikan Anda telah membuat Policy RLS untuk operasi INSERT pada tabel "transactions" di dashboard Supabase Anda (pilih policy: Enable insert for authenticated users, dengan check expression: auth.uid() = user_id).');
+      console.error(err);
+      toast.error('Gagal menyimpan: ' + err.message + '\n\nTips: Pastikan Anda telah membuat Policy RLS untuk operasi INSERT pada tabel "transactions" di dashboard Supabase Anda (pilih policy: Enable insert for authenticated users, dengan check expression: auth.uid() = user_id).');
     } finally {
       setLoading(false);
     }

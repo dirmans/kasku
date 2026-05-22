@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 export default function CapitalTab({ session }) {
   const isAuthorized = true;
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Form State
   const [showForm, setShowForm] = useState(false);
@@ -30,8 +32,8 @@ export default function CapitalTab({ session }) {
       if (error) throw error;
       setRecords(data || []);
     } catch (err) {
-      console.error('Error fetching capital records:', err.message);
-      // alert('Gagal mengambil data rekap modal: ' + err.message);
+      console.error(err);
+      toast.error('Gagal mengambil data rekap modal: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -65,8 +67,8 @@ export default function CapitalTab({ session }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!session?.user?.id) return alert('Sesi tidak valid.');
-    if (!itemName.trim()) return alert('Nama barang harus diisi');
+    if (!session?.user?.id) return toast.error('Sesi tidak valid.');
+    if (!itemName.trim()) return toast.error('Nama barang harus diisi');
     
     setSubmitting(true);
     try {
@@ -89,12 +91,12 @@ export default function CapitalTab({ session }) {
 
       if (error) throw error;
 
-      alert(editingId ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
+      toast.success(editingId ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!');
       resetForm();
       fetchRecords();
     } catch (err) {
-      console.error('Error saving record:', err);
-      alert('Gagal menyimpan data: pastikan tabel capital_records sudah dibuat di database Anda.');
+      console.error('Error saving capital record:', err);
+      toast.error('Gagal menyimpan data: pastikan tabel capital_records sudah dibuat di database Anda.');
     } finally {
       setSubmitting(false);
     }
@@ -109,9 +111,10 @@ export default function CapitalTab({ session }) {
         .eq('id', id);
 
       if (error) throw error;
+      toast.success('Data berhasil dihapus');
       fetchRecords();
     } catch (err) {
-      alert('Gagal menghapus catatan: ' + err.message);
+      toast.error('Gagal menghapus catatan: ' + err.message);
     }
   };
 
@@ -148,6 +151,16 @@ export default function CapitalTab({ session }) {
     };
   }, [records]);
 
+  // Filtered records based on search term
+  const filteredRecords = useMemo(() => {
+    if (!searchTerm) return records;
+    const lowerSearch = searchTerm.toLowerCase();
+    return records.filter(r => 
+      r.item_name.toLowerCase().includes(lowerSearch) ||
+      (r.note && r.note.toLowerCase().includes(lowerSearch))
+    );
+  }, [records, searchTerm]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
@@ -166,6 +179,18 @@ export default function CapitalTab({ session }) {
             {showForm ? 'Batal' : '+ Tambah Data'}
           </button>
         )}
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-surface rounded-xl border border-border p-4 shadow-sm">
+        <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">Cari Inventaris / Barang</label>
+        <input 
+          type="text"
+          placeholder="Cari nama barang atau catatan..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-1/2 p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+        />
       </div>
 
       {/* Summary Cards */}
@@ -294,7 +319,8 @@ export default function CapitalTab({ session }) {
             Belum ada catatan inventaris atau modal yang ditambahkan.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="overflow-x-auto">
             <table className="w-full text-[13px] text-left hidden md:table">
               <thead>
                 <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
@@ -308,7 +334,7 @@ export default function CapitalTab({ session }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {records.map(r => {
+                {filteredRecords.map(r => {
                   const modal = Number(r.buy_price) * Number(r.quantity);
                   const omset = Number(r.sell_price) * Number(r.quantity);
                   const margin = omset - modal;
@@ -353,10 +379,11 @@ export default function CapitalTab({ session }) {
                 })}
               </tbody>
             </table>
+          </div>
 
-            {/* Mobile Cards for Capital */}
-            <div className="grid grid-cols-1 gap-3 md:hidden">
-              {records.map(r => {
+          {/* Mobile Cards for Capital */}
+          <div className="grid grid-cols-1 gap-3 md:hidden p-4">
+            {filteredRecords.map(r => {
                 const modal = Number(r.buy_price) * Number(r.quantity);
                 const omset = Number(r.sell_price) * Number(r.quantity);
                 const margin = omset - modal;
@@ -398,7 +425,7 @@ export default function CapitalTab({ session }) {
                 );
               })}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

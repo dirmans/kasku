@@ -7,6 +7,7 @@ import ReportsTab from './ReportsTab';
 import CapitalTab from './CapitalTab';
 import SettingsTab from './SettingsTab';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -184,10 +185,10 @@ export default function Dashboard({ session }) {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Transaksi berhasil dihapus!');
+      toast.success('Transaksi berhasil dihapus!');
       fetchData();
     } catch (err) {
-      alert('Gagal menghapus transaksi: ' + err.message);
+      toast.error('Gagal menghapus transaksi: ' + err.message);
     }
   };
 

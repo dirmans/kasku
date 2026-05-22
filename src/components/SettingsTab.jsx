@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 export default function SettingsTab({ session, onReset }) {
   const [password, setPassword] = useState('');
@@ -12,20 +13,20 @@ export default function SettingsTab({ session, onReset }) {
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    if (!password) return alert('Kata sandi tidak boleh kosong');
-    if (password.length < 6) return alert('Kata sandi harus minimal 6 karakter');
-    if (password !== confirmPassword) return alert('Kata sandi tidak cocok');
+    if (!password) return toast.error('Kata sandi tidak boleh kosong');
+    if (password.length < 6) return toast.error('Kata sandi harus minimal 6 karakter');
+    if (password !== confirmPassword) return toast.error('Kata sandi tidak cocok');
 
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       
-      alert('Kata sandi berhasil diperbarui!');
+      toast.success('Kata sandi berhasil diperbarui!');
       setPassword('');
       setConfirmPassword('');
     } catch (err) {
-      alert('Gagal memperbarui kata sandi: ' + err.message);
+      toast.error('Gagal memperbarui kata sandi: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -65,10 +66,10 @@ export default function SettingsTab({ session, onReset }) {
 
       if (seedErr) throw seedErr;
 
-      alert('Seluruh data berhasil dihapus dan kategori default telah disemai ulang!');
+      toast.success('Seluruh data berhasil dihapus dan kategori default telah disemai ulang!');
       if (onReset) onReset();
     } catch (err) {
-      alert('Gagal melakukan reset data: ' + err.message);
+      toast.error('Gagal melakukan reset data: ' + err.message);
     } finally {
       setResetLoading(false);
     }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { jsPDF } from 'jspdf';
+import { toast } from 'react-hot-toast';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -505,10 +506,10 @@ export default function ReportsTab({ transactions, categories, loading }) {
 
       // Save PDF
       doc.save(`Laporan-KasKu-Bhineka_Djaya_Primasatya-${periodText.replace(/ /g, '_')}.pdf`);
-      alert('📄 Laporan PDF berhasil diunduh!');
+      toast.success('📄 Laporan PDF berhasil diunduh!');
     } catch (err) {
       console.error('Error generating PDF report:', err);
-      alert('Gagal mengekspor PDF: ' + err.message);
+      toast.error('Gagal mengekspor PDF: ' + err.message);
     }
   };
 
