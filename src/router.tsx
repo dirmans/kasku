@@ -106,15 +106,17 @@ function AuthLayout() {
               <p className="text-[13px] text-text3 mt-0.5">{headerInfo.subtitle}</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => openTransactionModal()}
-                className="w-full md:w-auto px-5 py-2.5 bg-textMain hover:bg-[#333] text-white text-[14px] font-semibold rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
-              >
-                <span className="text-[18px] leading-none">+</span> Tambah Transaksi
-              </button>
-            </div>
+            {['/', '/transactions'].includes(pathname) && (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openTransactionModal()}
+                  className="w-full md:w-auto px-5 py-2.5 bg-textMain hover:bg-[#333] text-white text-[14px] font-semibold rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+                >
+                  <span className="text-[18px] leading-none">+</span> Tambah Transaksi
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
