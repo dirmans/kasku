@@ -1,0 +1,12 @@
+#!/bin/sh
+# Dapatkan nama branch yang sedang aktif
+current_branch=$(git symbolic-ref --short HEAD)
+
+if [ "$current_branch" = "main" ]; then
+  echo "❌ GAGAL PUSH: Proteksi Lokal Aktif!"
+  echo "👉 Anda dilarang melakukan push langsung ke branch 'main'."
+  echo "👉 Silakan buat branch baru terlebih dahulu:"
+  echo "   git checkout -b <nama-branch-baru>"
+  echo "   git push origin <nama-branch-baru>"
+  exit 1
+fi

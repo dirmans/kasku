@@ -1,0 +1,40 @@
+name: Auto Create Pull Request
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Ambil nama branch saat ini
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          
+          echo "Memeriksa Pull Request untuk branch: $BRANCH_NAME"
+          
+          # Periksa apakah Pull Request untuk branch ini sudah pernah dibuat sebelumnya
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number')
+          
+          if [ -z "$PR_EXISTS" ]; then
+            echo "Membuat Pull Request otomatis..."
+            gh pr create \
+              --title "feat: merge changes from $BRANCH_NAME to main" \
+              --body "Pull Request otomatis dibuat setelah push ke branch \`$BRANCH_NAME\`." \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --draft
+          else
+            echo "Pull Request untuk branch $BRANCH_NAME sudah ada (PR #$PR_EXISTS). Langkah dilewati."
+          fi
