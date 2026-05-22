@@ -1,4 +1,6 @@
 import { RouterProvider } from '@tanstack/react-router';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import { AppProvider } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
@@ -32,6 +34,8 @@ function App() {
         }}
       />
       <RouterProvider router={router} context={{ session, authLoading: loading }} />
+      <Analytics />
+      <SpeedInsights />
     </AppProvider>
   );
 }

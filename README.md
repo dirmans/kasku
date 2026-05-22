@@ -63,4 +63,23 @@ Aplikasi dapat langsung diakses melalui browser pada alamat yang muncul di termi
 - `npm run check` : Memeriksa masalah gaya penulisan kode (*linter/formatter*) menggunakan Biome.
 - `npm run format` : Memperbaiki masalah format penulisan kode secara otomatis.
 
-*(Catatan: Proyek ini menggunakan **Husky** yang akan otomatis menjalankan pemeriksaan tipe data dan sintaks sebelum Anda melakukan `git commit` untuk memastikan proyek selalu dalam kondisi stabil).*
+## Arsitektur & Alur Kerja Pengembangan
+
+### 1. Navigasi & Routing (TanStack Router)
+Aplikasi ini menggunakan `@tanstack/react-router` untuk routing berbasis URL yang *type-safe*. Seluruh state aplikasi global dipusatkan di `src/context/AppContext.tsx` untuk sinkronisasi state yang efisien antarhalaman.
+
+### 2. Analitik & Pengukuran Performa
+Aplikasi terintegrasi dengan **Vercel Web Analytics** (untuk melacak statistik lalu lintas pengunjung) dan **Vercel Speed Insights** (untuk mengukur skor performa kecepatan pemuatan halaman secara langsung).
+
+### 3. Proteksi Branch & Otomatisasi Git
+Untuk menjaga stabilitas aplikasi, proyek ini menerapkan kebijakan alur kerja berikut:
+* **Husky Git Hooks**:
+  * **Pre-commit**: Secara otomatis melakukan pemeriksaan linting (`npm run check`) dan build aplikasi (`npm run build`) sebelum commit disimpan.
+  * **Pre-push**: Memblokir perintah `git push origin main` secara tidak sengaja langsung di komputer lokal jika Anda sedang berada di branch `main`.
+* **GitHub Actions (Auto Pull Request)**:
+  Setiap kali Anda melakukan *push* ke branch baru di GitHub (misal: `feat/fitur-baru`), draf Pull Request (PR) ke branch `main` akan **otomatis dibuat** di latar belakang menggunakan GitHub Actions.
+* **Cara Mengembangkan Fitur Baru**:
+  1. Buat branch baru: `git checkout -b feat/nama-fitur`
+  2. Lakukan perubahan kode dan commit.
+  3. Lakukan push branch: `git push origin feat/nama-fitur`
+  4. Buka repositori di GitHub untuk melihat draf Pull Request yang dibuat otomatis, lalu lakukan penggabungan (*merge*) setelah PR disetujui.
