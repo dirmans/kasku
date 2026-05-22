@@ -120,6 +120,20 @@ export default function Dashboard({ session }) {
     fetchData();
   }, [session]);
 
+  // Group Balance by Category
+  const balanceByCategory = useMemo(() => {
+    const groups = {};
+    transactions.forEach(t => {
+      if (!groups[t.category]) groups[t.category] = 0;
+      if (t.type === 'pemasukan') {
+        groups[t.category] += Number(t.amount);
+      } else {
+        groups[t.category] -= Number(t.amount);
+      }
+    });
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
+  }, [transactions]);
+
   // Group Expenses by Category for Doughnut Chart
   const expenseByCategory = useMemo(() => {
     const groups = {};
@@ -313,6 +327,38 @@ export default function Dashboard({ session }) {
             </div>
           </div>
 
+          {/* Balance By Category Section */}
+          <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
+            <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">Sisa Saldo per Kategori</h3>
+            {loading ? (
+              <div className="flex items-center justify-center p-6">
+                <div className="w-6 h-6 border-2 border-border border-t-textMain rounded-full animate-spin"></div>
+              </div>
+            ) : balanceByCategory.length === 0 ? (
+              <div className="p-6 text-center text-text3 text-[13px]">
+                Belum ada data saldo kategori.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {balanceByCategory.map(([catName, balance]) => {
+                  const catObj = categories.find(c => c.name === catName);
+                  const emoji = catObj ? catObj.emoji : '📦';
+                  return (
+                    <div key={catName} className="p-3 border border-border rounded-lg bg-surface2 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[16px]">{emoji}</span>
+                        <span className="font-semibold text-[13px] text-textMain truncate max-w-[80px] md:max-w-[100px]" title={catName}>{catName}</span>
+                      </div>
+                      <span className={`font-bold text-[13px] font-[tnum] ${balance >= 0 ? 'text-income' : 'text-expense'}`}>
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(balance)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Recent Transactions Section */}
           <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -408,7 +454,7 @@ export default function Dashboard({ session }) {
     }
 
     if (activeTab === 'categories') {
-      return <CategoriesTab session={session} />;
+      return <CategoriesTab session={session} transactions={transactions} />;
     }
 
     if (activeTab === 'transactions') {

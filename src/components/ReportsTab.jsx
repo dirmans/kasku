@@ -85,6 +85,20 @@ export default function ReportsTab({ transactions, categories, loading }) {
       .sort((a, b) => b[1] - a[1]);
   }, [reportTransactions]);
 
+  // Group Balance by Category
+  const balanceByCategory = useMemo(() => {
+    const groups = {};
+    reportTransactions.forEach(t => {
+      if (!groups[t.category]) groups[t.category] = 0;
+      if (t.type === 'pemasukan') {
+        groups[t.category] += Number(t.amount);
+      } else {
+        groups[t.category] -= Number(t.amount);
+      }
+    });
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
+  }, [reportTransactions]);
+
   // Group Monthly Cashflow Data for Chart (last 6 months with data)
   const monthlyCashflow = useMemo(() => {
     const monthlyData = {};
@@ -325,6 +339,44 @@ export default function ReportsTab({ transactions, categories, loading }) {
           y += 10;
         });
         y += 6;
+      }
+
+      // Sisa Saldo per Kategori
+      if (balanceByCategory.length > 0) {
+        if (y > 250) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.setTextColor(26, 25, 22);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Rincian Sisa Saldo Kategori', margin, y);
+        y += 6;
+
+        balanceByCategory.forEach(([cat, bal]) => {
+          if (y > 275) {
+            doc.addPage();
+            y = margin + 5;
+          }
+          doc.setTextColor(80, 80, 80);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.text(cat, margin + 4, y);
+
+          if (bal >= 0) {
+            doc.setTextColor(26, 107, 74);
+          } else {
+            doc.setTextColor(185, 48, 48);
+          }
+          doc.setFont('helvetica', 'bold');
+          doc.text(formatCurrency(bal), pageW - margin - 4, y, { align: 'right' });
+          
+          doc.setDrawColor(240, 239, 233);
+          doc.line(margin, y + 2, pageW - margin, y + 2);
+          
+          y += 8;
+        });
+        y += 4;
       }
 
       // Transactions Details List
@@ -583,6 +635,44 @@ export default function ReportsTab({ transactions, categories, loading }) {
                       <td className="py-2.5 font-medium text-textMain">{name}</td>
                       <td className="py-2.5 text-right font-bold text-expense font-[tnum]">{formatCurrency(val)}</td>
                       <td className="py-2.5 text-right font-[tnum] text-text2">{pct}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Balance By Category Table summary */}
+      <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
+        <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">Rincian Sisa Saldo Kategori</h3>
+        
+        {loading ? (
+          <div className="flex items-center justify-center p-6">
+            <div className="w-6 h-6 border-2 border-border border-t-textMain rounded-full animate-spin"></div>
+          </div>
+        ) : balanceByCategory.length === 0 ? (
+          <div className="p-6 text-center text-text3 text-[13px]">
+            Belum ada catatan saldo kategori pada periode ini.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px] text-left">
+              <thead>
+                <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
+                  <th className="pb-2">Kategori</th>
+                  <th className="pb-2 text-right">Sisa Saldo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {balanceByCategory.map(([name, bal]) => {
+                  return (
+                    <tr key={name} className="hover:bg-surface2/30 transition-colors">
+                      <td className="py-2.5 font-medium text-textMain">{name}</td>
+                      <td className={`py-2.5 text-right font-bold font-[tnum] ${bal >= 0 ? 'text-income' : 'text-expense'}`}>
+                        {formatCurrency(bal)}
+                      </td>
                     </tr>
                   );
                 })}

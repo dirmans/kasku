@@ -7,7 +7,16 @@ const POPULAR_EMOJIS = [
   '💰', '💵', '💳', '📊', '🏦', '🪙', '💎', '📈', '🚀', '🤝'
 ];
 
-export default function CategoriesTab({ session }) {
+export default function CategoriesTab({ session, transactions = [] }) {
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(val);
+  };
+
   const isLocal = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isAuthorized = true;
   const [categories, setCategories] = useState([]);
@@ -217,7 +226,11 @@ export default function CategoriesTab({ session }) {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {filteredCategories.map(cat => (
+          {filteredCategories.map(cat => {
+            const categoryTransactions = transactions.filter(t => t.category === cat.name && t.type === cat.type);
+            const totalAmount = categoryTransactions.reduce((acc, t) => acc + Number(t.amount), 0);
+            
+            return (
             <div key={cat.id} className="bg-surface rounded-xl border border-border p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-surface2 text-[20px]">
@@ -226,6 +239,9 @@ export default function CategoriesTab({ session }) {
                 <div>
                   <h4 className="font-semibold text-[13.5px] text-textMain">{cat.name}</h4>
                   <p className="text-[10px] text-text3 uppercase tracking-[0.4px]">{cat.type}</p>
+                  <p className={`text-[12px] font-bold mt-1 ${cat.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}>
+                    Total: {formatCurrency(totalAmount)}
+                  </p>
                 </div>
               </div>
               {isAuthorized && (
@@ -237,7 +253,8 @@ export default function CategoriesTab({ session }) {
                 </button>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
