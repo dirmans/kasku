@@ -61,9 +61,11 @@ export default function ReportsPage() {
       .forEach((t) => {
         groups[t.category] = (groups[t.category] || 0) + Number(t.amount);
       });
+    const total = Object.values(groups).reduce((a, b) => a + b, 0);
     return Object.entries(groups).map(([category, amount]) => ({
       category,
       amount,
+      percentage: total > 0 ? (amount / total) * 100 : 0,
     }));
   }, [reportTransactions]);
 
@@ -317,7 +319,7 @@ export default function ReportsPage() {
     }
   };
 
-  const expenseColumns: Column<{ category: string; amount: number }>[] = [
+  const expenseColumns: Column<{ category: string; amount: number; percentage: number }>[] = [
     { key: 'category', label: 'Kategori', sortable: true },
     {
       key: 'amount',
@@ -330,10 +332,9 @@ export default function ReportsPage() {
       key: 'percentage',
       label: 'Persentase',
       align: 'right',
+      sortable: true,
       render: (r) => {
-        const total = expenseByCategory.reduce((a, d) => a + d.amount, 0);
-        const pct = ((r.amount / total) * 100).toFixed(1);
-        return <span className="font-[tnum] text-text2">{pct}%</span>;
+        return <span className="font-[tnum] text-text2">{r.percentage.toFixed(1)}%</span>;
       },
     },
   ];

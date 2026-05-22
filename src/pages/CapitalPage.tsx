@@ -140,15 +140,25 @@ export default function CapitalPage() {
     });
   }, [filteredRecords, sortBy]);
 
-  const columns: Column<CapitalRecord>[] = [
+  // Processed records with profit field pre-calculated for table sorting
+  const processedRecords = useMemo(() => {
+    return sortedRecords.map((r) => ({
+      ...r,
+      profit: (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity),
+    }));
+  }, [sortedRecords]);
+
+  const columns: Column<CapitalRecord & { profit: number }>[] = [
     {
       key: 'date',
       label: 'Tanggal',
+      sortable: true,
       render: (r) => formatDate(r.date),
     },
     {
       key: 'item_name',
       label: 'Barang/Modal',
+      sortable: true,
       render: (r) => (
         <div>
           <div className="font-semibold text-textMain">{r.item_name}</div>
@@ -160,24 +170,28 @@ export default function CapitalPage() {
       key: 'quantity',
       label: 'Qty',
       align: 'center',
+      sortable: true,
       render: (r) => <span className="font-[tnum] font-medium">{r.quantity}</span>,
     },
     {
       key: 'buy_price',
       label: 'Harga Beli',
       align: 'right',
+      sortable: true,
       render: (r) => <span className="font-[tnum] text-expense">{formatCurrency(r.buy_price)}</span>,
     },
     {
       key: 'sell_price',
       label: 'Harga Jual',
       align: 'right',
+      sortable: true,
       render: (r) => <span className="font-[tnum] text-income">{formatCurrency(r.sell_price)}</span>,
     },
     {
       key: 'profit',
       label: 'Profit Estimasi',
       align: 'right',
+      sortable: true,
       render: (r) => {
         const margin = (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity);
         return (
@@ -411,7 +425,7 @@ export default function CapitalPage() {
       <DataTable
         title="Daftar Inventaris"
         columns={columns}
-        data={sortedRecords}
+        data={processedRecords}
         keyExtractor={(r) => r.id}
         loading={loading}
         emptyMessage="Belum ada catatan inventaris atau modal yang ditambahkan."

@@ -63,16 +63,42 @@ export default function DataTable<T>({
     }
   };
 
+  // Sorting Logic
+  const sortedData = useMemo(() => {
+    if (!sortKey) return data;
+
+    return [...data].sort((a, b) => {
+      const valA = (a as Record<string, unknown>)[sortKey];
+      const valB = (b as Record<string, unknown>)[sortKey];
+
+      if (valA === undefined || valA === null) return sortDirection === 'asc' ? 1 : -1;
+      if (valB === undefined || valB === null) return sortDirection === 'asc' ? -1 : 1;
+
+      // Handle numbers
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      }
+
+      // Handle strings (e.g. dates, category names, descriptions)
+      const strA = String(valA).toLowerCase();
+      const strB = String(valB).toLowerCase();
+
+      if (strA < strB) return sortDirection === 'asc' ? -1 : 1;
+      if (strA > strB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [data, sortKey, sortDirection]);
+
   // Pagination Logic
-  const totalItems = data.length;
+  const totalItems = sortedData.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   const indexOfLastItem = currentPage * pageSize;
   const indexOfFirstItem = indexOfLastItem - pageSize;
 
   const currentItems = useMemo(() => {
-    if (!pagination) return data;
-    return data.slice(indexOfFirstItem, indexOfLastItem);
-  }, [data, pagination, indexOfFirstItem, indexOfLastItem]);
+    if (!pagination) return sortedData;
+    return sortedData.slice(indexOfFirstItem, indexOfLastItem);
+  }, [sortedData, pagination, indexOfFirstItem, indexOfLastItem]);
 
   return (
     <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">

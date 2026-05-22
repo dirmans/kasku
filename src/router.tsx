@@ -105,7 +105,7 @@ function AuthLayout() {
               <p className="text-[13px] text-text3 mt-0.5">{headerInfo.subtitle}</p>
             </div>
 
-            {pathname === '/' && (
+            {['/', '/transactions'].includes(pathname) && (
               <div className="flex items-center gap-3">
                 <button
                   type="button"
