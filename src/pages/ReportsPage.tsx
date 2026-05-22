@@ -69,18 +69,19 @@ export default function ReportsPage() {
     }));
   }, [reportTransactions]);
 
-  const balanceByCategory = useMemo(() => {
+  const balanceByPaymentMethod = useMemo(() => {
     const groups: Record<string, number> = {};
     reportTransactions.forEach((t) => {
-      if (!groups[t.category]) groups[t.category] = 0;
+      const method = t.method || 'Tunai';
+      if (!groups[method]) groups[method] = 0;
       if (t.type === 'pemasukan') {
-        groups[t.category] += Number(t.amount);
+        groups[method] += Number(t.amount);
       } else {
-        groups[t.category] -= Number(t.amount);
+        groups[method] -= Number(t.amount);
       }
     });
-    return Object.entries(groups).map(([category, amount]) => ({
-      category,
+    return Object.entries(groups).map(([method, amount]) => ({
+      method,
       amount,
     }));
   }, [reportTransactions]);
@@ -339,8 +340,8 @@ export default function ReportsPage() {
     },
   ];
 
-  const balanceColumns: Column<{ category: string; amount: number }>[] = [
-    { key: 'category', label: 'Kategori', sortable: true },
+  const balanceColumns: Column<{ method: string; amount: number }>[] = [
+    { key: 'method', label: 'Jenis Kas', sortable: true },
     {
       key: 'amount',
       label: 'Sisa Saldo',
@@ -450,16 +451,16 @@ export default function ReportsPage() {
       />
 
       <DataTable
-        title="Rincian Sisa Saldo Kategori"
+        title="Rincian Sisa Saldo per Jenis Kas"
         columns={balanceColumns}
-        data={balanceByCategory}
-        keyExtractor={(r) => r.category}
+        data={balanceByPaymentMethod}
+        keyExtractor={(r) => r.method}
         loading={loading}
         defaultSortKey="amount"
-        emptyMessage="Belum ada catatan saldo kategori pada periode ini."
+        emptyMessage="Belum ada catatan saldo jenis kas pada periode ini."
         mobileCard={(r) => (
           <div className="flex items-center justify-between">
-            <div className="font-semibold text-textMain text-[14px]">{r.category}</div>
+            <div className="font-semibold text-textMain text-[14px]">{r.method}</div>
             <div className={`font-bold text-[14px] font-[tnum] ${r.amount >= 0 ? 'text-income' : 'text-expense'}`}>
               {formatCurrency(r.amount)}
             </div>
