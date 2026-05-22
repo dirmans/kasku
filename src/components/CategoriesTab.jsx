@@ -107,7 +107,7 @@ export default function CategoriesTab({ session, transactions = [] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h2 className="text-[20px] font-semibold text-textMain">Kelola Kategori</h2>
           <p className="text-[12px] text-text3 mt-0.5">Atur kategori pemasukan dan pengeluaran Anda</p>
@@ -118,7 +118,7 @@ export default function CategoriesTab({ session, transactions = [] }) {
               setFormType(activeType);
               setShowAddForm(!showAddForm);
             }}
-            className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
+            className="w-full sm:w-auto px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
           >
             {showAddForm ? 'Batal' : '+ Kategori Baru'}
           </button>

@@ -224,7 +224,7 @@ export default function TransactionsTab({
         ) : (
           <div className="space-y-4">
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px] text-left">
+              <table className="w-full text-[13px] text-left hidden md:table">
                 <thead>
                   <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
                     <th className="pb-3 pt-1">Tanggal</th>
@@ -289,23 +289,64 @@ export default function TransactionsTab({
                   ))}
                 </tbody>
               </table>
+
+              {/* Mobile Cards */}
+              <div className="grid grid-cols-1 gap-3 md:hidden">
+                {currentItems.map(t => (
+                  <div key={t.id} className="bg-surface border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="font-semibold text-[14px] text-textMain">{t.description}</div>
+                        <div className="text-[11.5px] text-text3 mt-0.5">{formatDate(t.date)}</div>
+                        {t.note && (
+                          <div className="text-[11px] font-normal text-text2 mt-1">{t.note}</div>
+                        )}
+                      </div>
+                      <div className={`text-right font-bold font-[tnum] text-[14px] ${t.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}>
+                        {t.type === 'pemasukan' ? '+' : '-'} {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(t.amount)}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border/50 pt-3 mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface2 rounded-full border border-border text-[11px] text-textMain font-medium">
+                          <span>{getCategoryEmoji(t.type, t.category)}</span>
+                          <span>{t.category}</span>
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          t.type === 'pemasukan' 
+                            ? 'bg-incomeBg border-[#d0f5e1] text-income' 
+                            : 'bg-expenseBg border-[#fbe3e3] text-expense'
+                        }`}>
+                          {t.type === 'pemasukan' ? '↑ Masuk' : '↓ Keluar'}
+                        </span>
+                      </div>
+                      {isAuthorized && (
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => onEdit(t)} className="p-1.5 rounded border border-border text-text3 hover:text-textMain hover:bg-surface2 transition-all">✏️</button>
+                          <button onClick={() => onDelete(t.id)} className="p-1.5 rounded border border-border text-text3 hover:text-expense hover:bg-expenseBg hover:border-[#f1c4c4] transition-all">🗑️</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-border pt-4 text-[12.5px] text-text2">
-                <div>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-t border-border pt-4 text-[12.5px] text-text2">
+                <div className="text-center md:text-left">
                   Menampilkan <span className="font-semibold text-textMain">{indexOfFirstItem + 1}</span> sampai{' '}
                   <span className="font-semibold text-textMain">{Math.min(indexOfLastItem, totalItems)}</span> dari{' '}
                   <span className="font-semibold text-textMain">{totalItems}</span> transaksi
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap justify-center items-center gap-1.5">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 border border-border rounded-lg bg-surface hover:bg-surface2 disabled:opacity-40 transition-colors"
+                    className="p-2 border border-border rounded-lg bg-surface hover:bg-surface2 disabled:opacity-40 transition-colors flex items-center gap-1"
                   >
-                    ◀️ Sebelumnya
+                    <span>◀️</span> <span className="hidden sm:inline">Sebelumnya</span>
                   </button>
                   
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
@@ -325,9 +366,9 @@ export default function TransactionsTab({
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 border border-border rounded-lg bg-surface hover:bg-surface2 disabled:opacity-40 transition-colors"
+                    className="p-2 border border-border rounded-lg bg-surface hover:bg-surface2 disabled:opacity-40 transition-colors flex items-center gap-1"
                   >
-                    Selanjutnya ▶️
+                    <span className="hidden sm:inline">Selanjutnya</span> <span>▶️</span>
                   </button>
                 </div>
               </div>

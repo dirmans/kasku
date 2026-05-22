@@ -339,7 +339,7 @@ export default function Dashboard({ session }) {
                 Belum ada data saldo kategori.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {balanceByCategory.map(([catName, balance]) => {
                   const catObj = categories.find(c => c.name === catName);
                   const emoji = catObj ? catObj.emoji : '📦';
@@ -381,7 +381,7 @@ export default function Dashboard({ session }) {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-[13px] text-left">
+                <table className="w-full text-[13px] text-left hidden md:table">
                   <thead>
                     <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
                       <th className="pb-3 pt-1">Tanggal</th>
@@ -446,6 +446,47 @@ export default function Dashboard({ session }) {
                     ))}
                   </tbody>
                 </table>
+                
+                {/* Mobile Cards */}
+                <div className="grid grid-cols-1 gap-3 md:hidden">
+                  {recentTx.map(t => (
+                    <div key={t.id} className="bg-surface border border-border rounded-xl p-4 shadow-sm relative overflow-hidden">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="font-semibold text-[14px] text-textMain">{t.description}</div>
+                          <div className="text-[11.5px] text-text3 mt-0.5">{formatDate(t.date)}</div>
+                          {t.note && (
+                            <div className="text-[11px] font-normal text-text2 mt-1">{t.note}</div>
+                          )}
+                        </div>
+                        <div className={`text-right font-bold font-[tnum] text-[14px] ${t.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}>
+                          {t.type === 'pemasukan' ? '+' : '-'} {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(t.amount)}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-border/50 pt-3 mt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface2 rounded-full border border-border text-[11px] text-textMain font-medium">
+                            <span>{getCategoryEmoji(t.type, t.category)}</span>
+                            <span>{t.category}</span>
+                          </span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            t.type === 'pemasukan' 
+                              ? 'bg-incomeBg border-[#d0f5e1] text-income' 
+                              : 'bg-expenseBg border-[#fbe3e3] text-expense'
+                          }`}>
+                            {t.type === 'pemasukan' ? '↑ Masuk' : '↓ Keluar'}
+                          </span>
+                        </div>
+                        {isAuthorized && (
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => handleEditTransaction(t)} className="p-1.5 rounded border border-border text-text3 hover:text-textMain hover:bg-surface2 transition-all">✏️</button>
+                            <button onClick={() => handleDeleteTransaction(t.id)} className="p-1.5 rounded border border-border text-text3 hover:text-expense hover:bg-expenseBg hover:border-[#f1c4c4] transition-all">🗑️</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -508,13 +549,13 @@ export default function Dashboard({ session }) {
         setActiveTab={setActiveTab} 
         onLogout={handleLogout} 
       />
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto pb-20 md:pb-0">
         <header className="bg-surface border-b border-border py-3.5 px-6 flex items-center justify-between sticky top-0 z-10">
           <div>
             <h1 className="text-[15px] font-semibold">{getHeaderInfo().title}</h1>
             <p className="text-[12px] text-text3 mt-0.5">{getHeaderInfo().subtitle}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="hidden md:flex gap-2">
             <button 
               className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
               onClick={() => {
@@ -530,6 +571,18 @@ export default function Dashboard({ session }) {
           {renderContent()}
         </div>
       </main>
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => {
+          setEditingTransaction(null);
+          setIsModalOpen(true);
+        }}
+        className="md:hidden fixed bottom-[84px] right-5 w-14 h-14 bg-textMain text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#333] active:scale-95 transition-all z-40"
+        title="Tambah Transaksi Baru"
+      >
+        <span className="text-[28px] leading-none mb-1">+</span>
+      </button>
       <TransactionModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 

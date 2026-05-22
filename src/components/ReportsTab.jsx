@@ -618,7 +618,7 @@ export default function ReportsTab({ transactions, categories, loading }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px] text-left">
+            <table className="w-full text-[13px] text-left hidden md:table">
               <thead>
                 <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
                   <th className="pb-2">Kategori</th>
@@ -640,6 +640,23 @@ export default function ReportsTab({ transactions, categories, loading }) {
                 })}
               </tbody>
             </table>
+
+            {/* Mobile Cards for Expense */}
+            <div className="grid grid-cols-1 gap-3 md:hidden">
+              {expenseByCategory.map(([name, val]) => {
+                const total = expenseByCategory.reduce((a, [, v]) => a + v, 0);
+                const pct = ((val / total) * 100).toFixed(1);
+                return (
+                  <div key={name} className="p-4 bg-surface2 border border-border rounded-xl shadow-sm flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-textMain text-[14px]">{name}</div>
+                      <div className="text-[11.5px] text-text3 mt-0.5">Persentase: {pct}%</div>
+                    </div>
+                    <div className="font-bold text-[14px] text-expense font-[tnum]">{formatCurrency(val)}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -658,7 +675,7 @@ export default function ReportsTab({ transactions, categories, loading }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px] text-left">
+            <table className="w-full text-[13px] text-left hidden md:table">
               <thead>
                 <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
                   <th className="pb-2">Kategori</th>
@@ -678,6 +695,18 @@ export default function ReportsTab({ transactions, categories, loading }) {
                 })}
               </tbody>
             </table>
+
+            {/* Mobile Cards for Balance */}
+            <div className="grid grid-cols-1 gap-3 md:hidden">
+              {balanceByCategory.map(([name, bal]) => (
+                <div key={name} className="p-4 bg-surface2 border border-border rounded-xl shadow-sm flex items-center justify-between">
+                  <div className="font-semibold text-textMain text-[14px]">{name}</div>
+                  <div className={`font-bold text-[14px] font-[tnum] ${bal >= 0 ? 'text-income' : 'text-expense'}`}>
+                    {formatCurrency(bal)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

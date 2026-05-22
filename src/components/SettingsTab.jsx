@@ -132,7 +132,7 @@ export default function SettingsTab({ session, onReset }) {
       </div>
 
       {/* Data Management Warning */}
-      {isAuthorized && (
+      {isLocal && isAuthorized && (
         <div className="bg-surface rounded-xl border border-red-200 p-5 shadow-sm space-y-4">
           <h3 className="font-bold text-[14px] text-red-600 uppercase tracking-[0.6px]">⚠️ Zona Bahaya</h3>
           <p className="text-[12.5px] text-text3">

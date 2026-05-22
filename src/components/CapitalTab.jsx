@@ -150,7 +150,7 @@ export default function CapitalTab({ session }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
           <h2 className="text-[20px] font-semibold text-textMain">Rekap Modal & Stok</h2>
           <p className="text-[12px] text-text3 mt-0.5">Lacak harga beli, harga jual, dan kuantitas inventaris</p>
@@ -161,7 +161,7 @@ export default function CapitalTab({ session }) {
               if (showForm) resetForm();
               else setShowForm(true);
             }}
-            className="px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
+            className="w-full sm:w-auto px-4 py-2 bg-textMain text-white rounded-md text-[13px] font-medium transition-colors hover:bg-[#333]"
           >
             {showForm ? 'Batal' : '+ Tambah Data'}
           </button>
@@ -295,7 +295,7 @@ export default function CapitalTab({ session }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px] text-left">
+            <table className="w-full text-[13px] text-left hidden md:table">
               <thead>
                 <tr className="text-text3 font-semibold uppercase tracking-[0.4px] text-[11px] border-b border-border">
                   <th className="pb-3 pt-1">Tanggal</th>
@@ -353,6 +353,51 @@ export default function CapitalTab({ session }) {
                 })}
               </tbody>
             </table>
+
+            {/* Mobile Cards for Capital */}
+            <div className="grid grid-cols-1 gap-3 md:hidden">
+              {records.map(r => {
+                const modal = Number(r.buy_price) * Number(r.quantity);
+                const omset = Number(r.sell_price) * Number(r.quantity);
+                const margin = omset - modal;
+
+                return (
+                  <div key={r.id} className="p-4 bg-surface2 border border-border rounded-xl shadow-sm relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="font-semibold text-textMain text-[14px]">{r.item_name}</div>
+                        <div className="text-[11.5px] text-text3 mt-0.5">{formatDate(r.date)} • Qty: {r.quantity}</div>
+                        {r.note && (
+                          <div className="text-[11px] font-normal text-text2 mt-1">{r.note}</div>
+                        )}
+                      </div>
+                      {isAuthorized && (
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEdit(r)} className="p-1.5 rounded border border-border text-text3 hover:text-textMain hover:bg-surface2 transition-all">✏️</button>
+                          <button onClick={() => handleDelete(r.id)} className="p-1.5 rounded border border-border text-text3 hover:text-expense hover:bg-expenseBg hover:border-[#f1c4c4] transition-all">🗑️</button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-[12px] pt-3 border-t border-border/50">
+                      <div>
+                        <div className="text-text3 text-[10px] uppercase font-semibold mb-0.5">Harga Beli</div>
+                        <div className="font-bold font-[tnum] text-expense">{formatCurrency(r.buy_price)}</div>
+                      </div>
+                      <div>
+                        <div className="text-text3 text-[10px] uppercase font-semibold mb-0.5">Harga Jual</div>
+                        <div className="font-bold font-[tnum] text-income">{formatCurrency(r.sell_price)}</div>
+                      </div>
+                      <div className="col-span-2 pt-2 border-t border-border/30 flex justify-between items-center">
+                        <span className="text-text3 text-[11px] font-medium uppercase">Profit Estimasi</span>
+                        <span className={`font-bold text-[14px] font-[tnum] ${margin >= 0 ? 'text-income' : 'text-expense'}`}>
+                          {margin > 0 ? '+' : ''}{formatCurrency(margin)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
