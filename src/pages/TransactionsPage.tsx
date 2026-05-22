@@ -3,11 +3,13 @@ import TransactionTable from '../components/templates/TransactionTable';
 import { useAppContext } from '../context/AppContext';
 
 export default function TransactionsPage() {
-  const { transactions, categories, loading, openTransactionModal, handleDeleteTransaction } = useAppContext();
+  const { transactions, categories, paymentMethods, loading, openTransactionModal, handleDeleteTransaction } =
+    useAppContext();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [selectedMethod, setSelectedMethod] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('date_desc');
@@ -21,6 +23,7 @@ export default function TransactionsPage() {
     setSearchTerm('');
     setSelectedCategory('');
     setSelectedType('all');
+    setSelectedMethod('all');
     setStartDate('');
     setEndDate('');
     setSortBy('date_desc');
@@ -32,6 +35,7 @@ export default function TransactionsPage() {
       t.note?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory = selectedCategory ? t.category === selectedCategory : true;
+    const matchesMethod = selectedMethod === 'all' ? true : (t.method || 'Tunai') === selectedMethod;
     const matchesType = selectedType === 'all' ? true : t.type === selectedType;
 
     let matchesDate = true;
@@ -42,7 +46,7 @@ export default function TransactionsPage() {
       matchesDate = matchesDate && t.date <= endDate;
     }
 
-    return matchesSearch && matchesCategory && matchesType && matchesDate;
+    return matchesSearch && matchesCategory && matchesMethod && matchesType && matchesDate;
   });
 
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
@@ -67,7 +71,7 @@ export default function TransactionsPage() {
       <div className="bg-surface rounded-xl border border-border p-5 shadow-sm space-y-4">
         <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px]">Penyaringan Transaksi</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
               Cari Deskripsi/Catatan
@@ -93,6 +97,24 @@ export default function TransactionsPage() {
               <option value="all">Semua Jenis</option>
               <option value="pemasukan">📈 Pemasukan</option>
               <option value="pengeluaran">📉 Pengeluaran</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+              Kas / Metode
+            </label>
+            <select
+              value={selectedMethod}
+              onChange={(e) => setSelectedMethod(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            >
+              <option value="all">Semua Kas</option>
+              {paymentMethods.map((pm) => (
+                <option key={pm.id} value={pm.name}>
+                  {pm.emoji || '💳'} {pm.name}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -55,6 +55,16 @@ export default function TransactionTable({
       ),
     },
     {
+      key: 'method',
+      label: 'Jenis Kas',
+      sortable: true,
+      render: (tx) => (
+        <span className="inline-flex items-center px-2 py-1 bg-surface3 rounded-md text-[11.5px] font-semibold text-textMain border border-border uppercase">
+          {tx.method || 'Tunai'}
+        </span>
+      ),
+    },
+    {
       key: 'type',
       label: 'Tipe',
       sortable: true,
@@ -110,6 +120,9 @@ export default function TransactionTable({
           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface2 rounded-full border border-border text-[11px] text-textMain font-medium">
             <span>{getCategoryEmoji ? getCategoryEmoji(tx.type, tx.category) : '📑'}</span>
             <span>{tx.category}</span>
+          </span>
+          <span className="px-2 py-0.5 bg-surface3 rounded text-[10px] font-semibold text-textMain uppercase border border-border">
+            {tx.method || 'Tunai'}
           </span>
           <Badge
             label={tx.type === 'pemasukan' ? 'Masuk' : 'Keluar'}

@@ -3,9 +3,10 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { useCategories } from '../hooks/useCategories';
+import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useTransactions } from '../hooks/useTransactions';
 import { supabase } from '../lib/supabase';
-import type { Category, Session, Transaction } from '../types';
+import type { Category, PaymentMethod, Session, Transaction } from '../types';
 
 interface AppContextType {
   session: Session | null;
@@ -14,9 +15,11 @@ interface AppContextType {
   loading: boolean;
   transactions: Transaction[];
   categories: Category[];
+  paymentMethods: PaymentMethod[];
   fetchData: () => Promise<void>;
   fetchTransactions: () => Promise<Transaction[] | undefined>;
   fetchCategories: () => Promise<Category[] | undefined>;
+  fetchPaymentMethods: () => Promise<PaymentMethod[] | undefined>;
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
   editingTransaction: Transaction | null;
@@ -35,19 +38,68 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const { transactions, fetchTransactions } = useTransactions(session);
   const { categories, fetchCategories } = useCategories(session);
+  const { paymentMethods, fetchPaymentMethods } = usePaymentMethods(session);
+
+  const runDataMigration = useCallback(
+    async (loadedTransactions: Transaction[]) => {
+      if (!session?.user?.id || !loadedTransactions) return;
+
+      // Cari transaksi yang memiliki category Mamad atau Nova (case-insensitive)
+      const targets = loadedTransactions.filter((tx) => {
+        const cat = tx.category ? tx.category.toLowerCase() : '';
+        return cat === 'mamad' || cat === 'nova';
+      });
+
+      if (targets.length === 0) return;
+
+      console.log(`Starting migration for ${targets.length} transactions...`);
+      let updatedCount = 0;
+
+      try {
+        for (const tx of targets) {
+          const catLower = tx.category.toLowerCase();
+          const newMethod = catLower === 'mamad' ? 'TF Mamad' : 'TF Nova';
+          const newCategory = tx.type === 'pemasukan' ? 'Pembayaran pelanggan' : 'Lainnya';
+
+          const { error } = await supabase
+            .from('transactions')
+            .update({ method: newMethod, category: newCategory })
+            .eq('id', tx.id);
+
+          if (error) {
+            console.error(`Failed to migrate transaction ID ${tx.id}:`, error);
+          } else {
+            updatedCount++;
+          }
+        }
+
+        if (updatedCount > 0) {
+          console.log(`Successfully migrated ${updatedCount} transactions.`);
+          await fetchTransactions();
+        }
+      } catch (err) {
+        console.error('Migration error:', err);
+      }
+    },
+    [session, fetchTransactions],
+  );
 
   const fetchData = useCallback(async () => {
     if (!session?.user?.id) return;
     setDataLoading(true);
     try {
-      await Promise.all([fetchTransactions(), fetchCategories()]);
+      const [txs] = await Promise.all([fetchTransactions(), fetchCategories(), fetchPaymentMethods()]);
+
+      if (txs) {
+        await runDataMigration(txs);
+      }
     } catch (err) {
       console.error('Error fetching context data:', err);
       toast.error('Gagal memuat data aplikasi');
     } finally {
       setDataLoading(false);
     }
-  }, [session, fetchTransactions, fetchCategories]);
+  }, [session, fetchTransactions, fetchCategories, fetchPaymentMethods, runDataMigration]);
 
   useEffect(() => {
     if (session) {
@@ -85,9 +137,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loading,
     transactions,
     categories,
+    paymentMethods,
     fetchData,
     fetchTransactions,
     fetchCategories,
+    fetchPaymentMethods,
     isModalOpen,
     setIsModalOpen,
     editingTransaction,
