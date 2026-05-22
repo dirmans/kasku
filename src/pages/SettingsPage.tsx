@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import { useCategories } from '../hooks/useCategories';
+import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useTransactions } from '../hooks/useTransactions';
 
 export default function SettingsPage() {
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const { updatePassword } = useAuth();
   const { deleteAllTransactions } = useTransactions(session);
   const { deleteAllCategories } = useCategories(session);
+  const { deleteAllPaymentMethods } = usePaymentMethods(session);
 
   const handleUpdatePassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,9 @@ export default function SettingsPage() {
 
       // 2. Delete all categories & re-seed
       await deleteAllCategories();
+
+      // 3. Delete all payment methods & re-seed
+      await deleteAllPaymentMethods();
 
       toast.success('Seluruh data berhasil dihapus dan kategori default telah disemai ulang!');
       await fetchData();

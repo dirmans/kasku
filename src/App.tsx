@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AppProvider } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';

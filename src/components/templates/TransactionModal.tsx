@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { useCategories } from '../../hooks/useCategories';
+import { useAppContext } from '../../context/AppContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import type { Session, Transaction } from '../../types';
 import Modal from '../organisms/Modal';
@@ -19,15 +19,18 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [method, setMethod] = useState('Tunai');
   const [loading, setLoading] = useState(false);
-  const { categories, fetchCategories } = useCategories(session);
+
+  const { categories, paymentMethods, fetchCategories, fetchPaymentMethods } = useAppContext();
   const { addTransaction, updateTransaction } = useTransactions(session);
 
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
+      fetchPaymentMethods();
     }
-  }, [isOpen, fetchCategories]);
+  }, [isOpen, fetchCategories, fetchPaymentMethods]);
 
   useEffect(() => {
     if (transaction) {
@@ -36,12 +39,14 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
       setDate(transaction.date || '');
       setDescription(transaction.description || '');
       setCategory(transaction.category || '');
+      setMethod(transaction.method || 'Tunai');
     } else {
       setType('pengeluaran');
       setAmount('');
       setDate(new Date().toISOString().split('T')[0]);
       setDescription('');
       setCategory('');
+      setMethod('Tunai');
     }
   }, [transaction, isOpen]);
 
@@ -60,7 +65,7 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
         date,
         description: description.trim(),
         category,
-        method: 'tunai',
+        method,
         note: '',
       };
 
@@ -184,23 +189,42 @@ export default function TransactionModal({ isOpen, onClose, transaction, session
           />
         </div>
 
-        <div>
-          <label className="block text-[12px] font-semibold text-text2 mb-[6px] uppercase tracking-[0.4px]">
-            Kategori
-          </label>
-          <select
-            className="w-full p-[10px_14px] border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none transition-colors focus:border-textMain focus:bg-surface"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          >
-            <option value="">Pilih kategori...</option>
-            {filteredCategories.map((cat) => (
-              <option key={cat.id} value={cat.name}>
-                {cat.emoji || '📑'} {cat.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[12px] font-semibold text-text2 mb-[6px] uppercase tracking-[0.4px]">
+              Kategori
+            </label>
+            <select
+              className="w-full p-[10px_14px] border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none transition-colors focus:border-textMain focus:bg-surface"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+            >
+              <option value="">Pilih kategori...</option>
+              {filteredCategories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.emoji || '📑'} {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-semibold text-text2 mb-[6px] uppercase tracking-[0.4px]">
+              Jenis Kas
+            </label>
+            <select
+              className="w-full p-[10px_14px] border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none transition-colors focus:border-textMain focus:bg-surface"
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              required
+            >
+              {paymentMethods.map((pm) => (
+                <option key={pm.id} value={pm.name}>
+                  {pm.emoji || '💳'} {pm.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </form>
     </Modal>

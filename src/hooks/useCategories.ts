@@ -15,13 +15,27 @@ export function useCategories(session: Session | null) {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        await supabase.rpc('seed_default_categories', {
-          p_user_id: session.user.id,
-        });
+        const defaultCats = [
+          { name: 'Modal Awal', type: 'pemasukan', emoji: '💰' },
+          { name: 'Pembayaran pelanggan', type: 'pemasukan', emoji: '🤝' },
+          { name: 'Lainnya', type: 'pemasukan', emoji: '📦' },
+          { name: 'Biaya Kandang', type: 'pengeluaran', emoji: '🏠' },
+          { name: 'UM Pegawai', type: 'pengeluaran', emoji: '💵' },
+          { name: 'Gaji Pegawai', type: 'pengeluaran', emoji: '💼' },
+          { name: 'Rumput', type: 'pengeluaran', emoji: '🌱' },
+          { name: 'Obat-obatan', type: 'pengeluaran', emoji: '💊' },
+          { name: 'Biaya Transportasi', type: 'pengeluaran', emoji: '🚗' },
+          { name: 'Setoran Modal', type: 'pengeluaran', emoji: '🪙' },
+          { name: 'Lainnya', type: 'pengeluaran', emoji: '📦' },
+        ];
+
+        const { error: seedErr } = await supabase
+          .from('categories')
+          .insert(defaultCats.map((c) => ({ ...c, user_id: session.user.id })));
+        if (seedErr) throw seedErr;
 
         // Refetch after seeding
         const { data: newData, error: newError } = await supabase.from('categories').select('*').order('name');
-
         if (newError) throw newError;
         data = newData;
       }
@@ -54,9 +68,23 @@ export function useCategories(session: Session | null) {
     if (catErr) throw catErr;
 
     // Reseed default categories
-    const { error: seedErr } = await supabase.rpc('seed_default_categories', {
-      p_user_id: session.user.id,
-    });
+    const defaultCats = [
+      { name: 'Modal Awal', type: 'pemasukan', emoji: '💰' },
+      { name: 'Pembayaran pelanggan', type: 'pemasukan', emoji: '🤝' },
+      { name: 'Lainnya', type: 'pemasukan', emoji: '📦' },
+      { name: 'Biaya Kandang', type: 'pengeluaran', emoji: '🏠' },
+      { name: 'UM Pegawai', type: 'pengeluaran', emoji: '💵' },
+      { name: 'Gaji Pegawai', type: 'pengeluaran', emoji: '💼' },
+      { name: 'Rumput', type: 'pengeluaran', emoji: '🌱' },
+      { name: 'Obat-obatan', type: 'pengeluaran', emoji: '💊' },
+      { name: 'Biaya Transportasi', type: 'pengeluaran', emoji: '🚗' },
+      { name: 'Setoran Modal', type: 'pengeluaran', emoji: '🪙' },
+      { name: 'Lainnya', type: 'pengeluaran', emoji: '📦' },
+    ];
+
+    const { error: seedErr } = await supabase
+      .from('categories')
+      .insert(defaultCats.map((c) => ({ ...c, user_id: session.user.id })));
     if (seedErr) throw seedErr;
   };
 

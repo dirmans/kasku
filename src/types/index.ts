@@ -45,3 +45,11 @@ export interface CapitalRecord {
   note?: string;
   created_at?: string;
 }
+
+export interface PaymentMethod {
+  id: number;
+  user_id: string;
+  name: string;
+  emoji?: string;
+  created_at?: string;
+}
