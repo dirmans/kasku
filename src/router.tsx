@@ -5,6 +5,7 @@ import {
   Outlet,
   redirect,
   useRouter,
+  useRouterState,
 } from '@tanstack/react-router';
 import Sidebar from './components/layout/Sidebar';
 import TransactionModal from './components/templates/TransactionModal';
@@ -48,7 +49,7 @@ function AuthLayout() {
   const { session, isModalOpen, setIsModalOpen, editingTransaction, fetchData, openTransactionModal } = useAppContext();
   const { signOut } = useAuth();
   const router = useRouter();
-  const pathname = router.state.location.pathname;
+  const pathname = useRouterState().location.pathname;
 
   const getHeaderInfo = (path: string) => {
     switch (path) {
@@ -105,17 +106,15 @@ function AuthLayout() {
               <p className="text-[13px] text-text3 mt-0.5">{headerInfo.subtitle}</p>
             </div>
 
-            {['/', '/transactions'].includes(pathname) && (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => openTransactionModal()}
-                  className="w-full md:w-auto px-5 py-2.5 bg-textMain hover:bg-[#333] text-white text-[14px] font-semibold rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
-                >
-                  <span className="text-[18px] leading-none">+</span> Tambah Transaksi
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => openTransactionModal()}
+                className="w-full md:w-auto px-5 py-2.5 bg-textMain hover:bg-[#333] text-white text-[14px] font-semibold rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+              >
+                <span className="text-[18px] leading-none">+</span> Tambah Transaksi
+              </button>
+            </div>
           </div>
         </header>
 
@@ -133,6 +132,9 @@ function AuthLayout() {
         onSuccess={() => {
           setIsModalOpen(false);
           fetchData();
+          if (!editingTransaction) {
+            router.navigate({ to: '/' });
+          }
         }}
       />
     </div>

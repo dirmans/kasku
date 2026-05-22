@@ -11,7 +11,8 @@ import { formatCurrency } from '../utils/formatters';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 export default function Dashboard() {
-  const { transactions, categories, loading, openTransactionModal, handleDeleteTransaction } = useAppContext();
+  const { transactions, categories, paymentMethods, loading, openTransactionModal, handleDeleteTransaction } =
+    useAppContext();
 
   // Compute Stats
   const stats = useMemo(() => {
@@ -25,15 +26,16 @@ export default function Dashboard() {
     };
   }, [transactions]);
 
-  // Group Balance by Category
-  const balanceByCategory = useMemo(() => {
+  // Group Balance by Payment Method
+  const balanceByPaymentMethod = useMemo(() => {
     const groups: Record<string, number> = {};
     transactions.forEach((t) => {
-      if (!groups[t.category]) groups[t.category] = 0;
+      const method = t.method || 'Tunai';
+      if (!groups[method]) groups[method] = 0;
       if (t.type === 'pemasukan') {
-        groups[t.category] += Number(t.amount);
+        groups[method] += Number(t.amount);
       } else {
-        groups[t.category] -= Number(t.amount);
+        groups[method] -= Number(t.amount);
       }
     });
     return Object.entries(groups).sort((a, b) => b[1] - a[1]);
@@ -88,6 +90,11 @@ export default function Dashboard() {
   const getCategoryEmoji = (type: string, catName: string): string => {
     const found = categories.find((c) => c.name === catName && c.type === type);
     return found ? found.emoji || '📦' : '📦';
+  };
+
+  const getMethodEmoji = (methodName: string): string => {
+    const found = paymentMethods.find((pm) => pm.name === methodName);
+    return found ? found.emoji || '💳' : '💳';
   };
 
   const recentTx = useMemo(() => transactions.slice(0, 5), [transactions]);
@@ -199,31 +206,33 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Balance By Category Section */}
+      {/* Balance By Payment Method Section */}
       <div className="bg-surface rounded-xl border border-border p-5 shadow-sm">
-        <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">Sisa Saldo per Kategori</h3>
+        <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px] mb-4">
+          Sisa Saldo per Jenis Kas
+        </h3>
         {loading ? (
           <div className="flex items-center justify-center p-6">
             <Spinner size="lg" />
           </div>
-        ) : balanceByCategory.length === 0 ? (
-          <div className="p-6 text-center text-text3 text-[13px]">Belum ada data saldo kategori.</div>
+        ) : balanceByPaymentMethod.length === 0 ? (
+          <div className="p-6 text-center text-text3 text-[13px]">Belum ada data saldo jenis kas.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {balanceByCategory.map(([catName, balance]) => {
-              const emoji = getCategoryEmoji('pemasukan', catName);
+            {balanceByPaymentMethod.map(([methodName, balance]) => {
+              const emoji = getMethodEmoji(methodName);
               return (
                 <div
-                  key={catName}
+                  key={methodName}
                   className="p-3 border border-border rounded-lg bg-surface2 flex items-center justify-between shadow-sm"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-[16px]">{emoji}</span>
                     <span
                       className="font-semibold text-[13px] text-textMain truncate max-w-[80px] md:max-w-[100px]"
-                      title={catName}
+                      title={methodName}
                     >
-                      {catName}
+                      {methodName}
                     </span>
                   </div>
                   <span
