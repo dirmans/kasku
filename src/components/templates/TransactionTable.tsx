@@ -35,6 +35,7 @@ export default function TransactionTable({
     {
       key: 'description',
       label: 'Keterangan',
+      sortable: true,
       render: (tx) => (
         <div>
           <div className="font-semibold text-textMain">{tx.description}</div>
@@ -45,6 +46,7 @@ export default function TransactionTable({
     {
       key: 'category',
       label: 'Kategori',
+      sortable: true,
       render: (tx) => (
         <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface2 rounded-full border border-border text-[11.5px] text-textMain font-medium">
           <span>{getCategoryEmoji ? getCategoryEmoji(tx.type, tx.category) : '📑'}</span>
@@ -55,6 +57,7 @@ export default function TransactionTable({
     {
       key: 'type',
       label: 'Tipe',
+      sortable: true,
       render: (tx) => (
         <Badge
           label={tx.type === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -8,6 +9,12 @@ import { router } from './router';
 
 function App() {
   const { session, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      router.invalidate();
+    }
+  }, [session, loading]);
 
   if (loading) {
     return (
