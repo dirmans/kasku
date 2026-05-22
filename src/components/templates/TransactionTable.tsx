@@ -37,9 +37,9 @@ export default function TransactionTable({
       label: 'Keterangan',
       sortable: true,
       render: (tx) => (
-        <div>
-          <div className="font-semibold text-textMain">{tx.description}</div>
-          {tx.note && <div className="text-[10.5px] font-normal text-text3 mt-0.5">{tx.note}</div>}
+        <div className="break-words max-w-[250px]">
+          <div className="font-semibold text-textMain break-words">{tx.description}</div>
+          {tx.note && <div className="text-[10.5px] font-normal text-text3 mt-0.5 break-words">{tx.note}</div>}
         </div>
       ),
     },
@@ -103,20 +103,20 @@ export default function TransactionTable({
 
   const mobileCard = (tx: Transaction) => (
     <>
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <div className="font-semibold text-[14px] text-textMain">{tx.description}</div>
+      <div className="flex justify-between items-start mb-3 gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-[14px] text-textMain break-words">{tx.description}</div>
           <div className="text-[11.5px] text-text3 mt-0.5">{formatDate(tx.date)}</div>
-          {tx.note && <div className="text-[11px] font-normal text-text2 mt-1">{tx.note}</div>}
+          {tx.note && <div className="text-[11px] font-normal text-text2 mt-1 break-words">{tx.note}</div>}
         </div>
         <div
-          className={`text-right font-bold font-[tnum] text-[14px] ${tx.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}
+          className={`flex-shrink-0 text-right font-bold font-[tnum] text-[14px] ${tx.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}
         >
           {tx.type === 'pemasukan' ? '+' : '-'} {formatCurrency(tx.amount)}
         </div>
       </div>
-      <div className="flex items-center justify-between border-t border-border/50 pt-3 mt-1">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between border-t border-border/50 pt-3 mt-1 gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 mr-2">
           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface2 rounded-full border border-border text-[11px] text-textMain font-medium">
             <span>{getCategoryEmoji ? getCategoryEmoji(tx.type, tx.category) : '📑'}</span>
             <span>{tx.category}</span>
@@ -131,7 +131,9 @@ export default function TransactionTable({
             className="text-[10px]"
           />
         </div>
-        <ActionButtons onEdit={() => onEdit(tx)} onDelete={() => onDelete(tx.id)} />
+        <div className="flex-shrink-0">
+          <ActionButtons onEdit={() => onEdit(tx)} onDelete={() => onDelete(tx.id)} />
+        </div>
       </div>
     </>
   );
