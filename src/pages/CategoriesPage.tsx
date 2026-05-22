@@ -3,8 +3,8 @@ import { toast } from 'react-hot-toast';
 import Spinner from '../components/atoms/Spinner';
 import EmptyState from '../components/molecules/EmptyState';
 import PageHeader from '../components/molecules/PageHeader';
+import { useAppContext } from '../context/AppContext';
 import { useCategories } from '../hooks/useCategories';
-import type { Session, Transaction } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
 const POPULAR_EMOJIS = [
@@ -38,12 +38,8 @@ const POPULAR_EMOJIS = [
   '🤝',
 ];
 
-interface CategoriesTabProps {
-  session: Session | null;
-  transactions?: Transaction[];
-}
-
-export default function CategoriesTab({ session, transactions = [] }: CategoriesTabProps) {
+export default function CategoriesPage() {
+  const { session, transactions, fetchCategories: refreshGlobalCategories } = useAppContext();
   const isAuthorized = true;
   const { categories, loading, fetchCategories, addCategory, deleteCategory } = useCategories(session);
   const [activeType, setActiveType] = useState<'pemasukan' | 'pengeluaran'>('pengeluaran');
@@ -81,7 +77,8 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
       toast.success('Kategori berhasil ditambahkan!');
       setName('');
       setShowAddForm(false);
-      fetchCategories();
+      await fetchCategories();
+      await refreshGlobalCategories();
     } catch (error) {
       const err = error as Error;
       console.error('Error adding category:', err);
@@ -97,7 +94,8 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
     try {
       await deleteCategory(id);
       toast.success('Kategori berhasil dihapus!');
-      fetchCategories();
+      await fetchCategories();
+      await refreshGlobalCategories();
     } catch (error) {
       const err = error as Error;
       toast.error(`Gagal menghapus kategori: ${err.message}`);
@@ -114,6 +112,7 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
         actions={
           isAuthorized && (
             <button
+              type="button"
               onClick={() => {
                 setFormType(activeType);
                 setShowAddForm(!showAddForm);
@@ -142,14 +141,22 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
                 <button
                   type="button"
                   onClick={() => setFormType('pemasukan')}
-                  className={`p-2 rounded-lg border text-[13px] font-medium transition-all ${formType === 'pemasukan' ? 'bg-incomeBg border-income text-income' : 'border-border bg-transparent text-text2'}`}
+                  className={`p-2 rounded-lg border text-[13px] font-medium transition-all ${
+                    formType === 'pemasukan'
+                      ? 'bg-incomeBg border-income text-income'
+                      : 'border-border bg-transparent text-text2'
+                  }`}
                 >
                   📈 Pemasukan
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormType('pengeluaran')}
-                  className={`p-2 rounded-lg border text-[13px] font-medium transition-all ${formType === 'pengeluaran' ? 'bg-expenseBg border-expense text-expense' : 'border-border bg-transparent text-text2'}`}
+                  className={`p-2 rounded-lg border text-[13px] font-medium transition-all ${
+                    formType === 'pengeluaran'
+                      ? 'bg-expenseBg border-expense text-expense'
+                      : 'border-border bg-transparent text-text2'
+                  }`}
                 >
                   📉 Pengeluaran
                 </button>
@@ -181,7 +188,9 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
                   key={em}
                   type="button"
                   onClick={() => setEmoji(em)}
-                  className={`w-8 h-8 flex items-center justify-center rounded text-[18px] hover:bg-surface transition-all ${emoji === em ? 'bg-surface border-2 border-textMain scale-110 shadow-sm' : ''}`}
+                  className={`w-8 h-8 flex items-center justify-center rounded text-[18px] hover:bg-surface transition-all ${
+                    emoji === em ? 'bg-surface border-2 border-textMain scale-110 shadow-sm' : ''
+                  }`}
                 >
                   {em}
                 </button>
@@ -211,8 +220,11 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
       {/* Tabs list */}
       <div className="flex border-b border-border gap-4">
         <button
+          type="button"
           onClick={() => setActiveType('pengeluaran')}
-          className={`pb-2.5 px-1 text-[14px] font-semibold transition-all relative ${activeType === 'pengeluaran' ? 'text-expense' : 'text-text3 hover:text-text2'}`}
+          className={`pb-2.5 px-1 text-[14px] font-semibold transition-all relative ${
+            activeType === 'pengeluaran' ? 'text-expense' : 'text-text3 hover:text-text2'
+          }`}
         >
           📉 Pengeluaran
           {activeType === 'pengeluaran' && (
@@ -220,8 +232,11 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
           )}
         </button>
         <button
+          type="button"
           onClick={() => setActiveType('pemasukan')}
-          className={`pb-2.5 px-1 text-[14px] font-semibold transition-all relative ${activeType === 'pemasukan' ? 'text-income' : 'text-text3 hover:text-text2'}`}
+          className={`pb-2.5 px-1 text-[14px] font-semibold transition-all relative ${
+            activeType === 'pemasukan' ? 'text-income' : 'text-text3 hover:text-text2'
+          }`}
         >
           📈 Pemasukan
           {activeType === 'pemasukan' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-income rounded" />}
@@ -256,7 +271,9 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
                     <h4 className="font-semibold text-[13.5px] text-textMain">{cat.name}</h4>
                     <p className="text-[10px] text-text3 uppercase tracking-[0.4px]">{cat.type}</p>
                     <p
-                      className={`text-[12px] font-bold mt-1 ${cat.type === 'pemasukan' ? 'text-income' : 'text-expense'}`}
+                      className={`text-[12px] font-bold mt-1 ${
+                        cat.type === 'pemasukan' ? 'text-income' : 'text-expense'
+                      }`}
                     >
                       Total: {formatCurrency(totalAmount)}
                     </p>
@@ -264,6 +281,7 @@ export default function CategoriesTab({ session, transactions = [] }: Categories
                 </div>
                 {isAuthorized && (
                   <button
+                    type="button"
                     onClick={() => handleDelete(cat.id)}
                     className="w-7 h-7 rounded border border-border flex items-center justify-center text-text3 hover:text-expense hover:border-[#f1c4c4] hover:bg-expenseBg transition-all"
                   >

@@ -1,21 +1,20 @@
+import { Link } from '@tanstack/react-router';
 import type { User } from '../../types';
 
 interface SidebarProps {
   user: User | null;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   onLogout: () => void;
 }
 
-export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProps) {
+export default function Sidebar({ user, onLogout }: SidebarProps) {
   const navItems = [
-    { id: 'dashboard', label: 'Dasbor', icon: '📊' },
-    { id: 'transactions', label: 'Transaksi', icon: '💸' },
-    { id: 'reports', label: 'Laporan', icon: '📈' },
-    { id: 'categories', label: 'Kategori', icon: '📑' },
-    { id: 'capital', label: 'Modal', icon: '📦' },
-    { id: 'settings', label: 'Atur', icon: '⚙️' },
-  ];
+    { to: '/', label: 'Dasbor', icon: '📊' },
+    { to: '/transactions', label: 'Transaksi', icon: '💸' },
+    { to: '/reports', label: 'Laporan', icon: '📈' },
+    { to: '/categories', label: 'Kategori', icon: '📑' },
+    { to: '/capital', label: 'Modal', icon: '📦' },
+    { to: '/settings', label: 'Atur', icon: '⚙️' },
+  ] as const;
 
   return (
     <>
@@ -38,24 +37,26 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
             Menu Utama
           </div>
           {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg text-[13.5px] mb-0.5 text-left transition-colors
-                ${
-                  activeTab === item.id
-                    ? 'bg-[rgba(255,255,255,0.12)] text-white font-medium'
-                    : 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white'
-                }`}
+            <Link
+              key={item.to}
+              to={item.to}
+              activeProps={{
+                className: 'bg-[rgba(255,255,255,0.12)] text-white font-medium',
+              }}
+              inactiveProps={{
+                className: 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white',
+              }}
+              className="w-full flex items-center gap-2.5 p-2.5 rounded-lg text-[13.5px] mb-0.5 text-left transition-colors"
             >
               <span className="opacity-80">{item.icon}</span>
               {item.label}
-            </button>
+            </Link>
           ))}
         </div>
 
         <div className="p-3.5 px-2.5 border-t border-[rgba(255,255,255,0.08)]">
           <button
+            type="button"
             onClick={onLogout}
             className="w-full flex items-center gap-2 p-2.5 rounded-lg text-[13px] text-[rgba(255,255,255,0.5)] text-left transition-colors hover:bg-[rgba(255,0,0,0.1)] hover:text-[#ff6b6b]"
           >
@@ -68,20 +69,26 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 flex justify-between items-center px-1 pb-1 pt-1 overflow-x-auto hide-scrollbar">
         {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center justify-center p-2 min-w-[56px] flex-1 transition-colors rounded-lg ${
-              activeTab === item.id ? 'text-textMain' : 'text-text3 hover:text-text2'
-            }`}
+          <Link
+            key={item.to}
+            to={item.to}
+            activeProps={{
+              className: 'text-textMain',
+            }}
+            inactiveProps={{
+              className: 'text-text3 hover:text-text2',
+            }}
+            className="flex flex-col items-center justify-center p-2 min-w-[56px] flex-1 transition-colors rounded-lg"
           >
-            <span
-              className={`text-[18px] mb-1 ${activeTab === item.id ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`}
-            >
-              {item.icon}
-            </span>
-            <span className="text-[9px] font-semibold tracking-tight">{item.label}</span>
-          </button>
+            {({ isActive }) => (
+              <>
+                <span className={`text-[18px] mb-1 ${isActive ? 'opacity-100 grayscale-0' : 'opacity-50 grayscale'}`}>
+                  {item.icon}
+                </span>
+                <span className="text-[9px] font-semibold tracking-tight">{item.label}</span>
+              </>
+            )}
+          </Link>
         ))}
       </nav>
     </>

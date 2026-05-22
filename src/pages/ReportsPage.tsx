@@ -7,18 +7,14 @@ import Spinner from '../components/atoms/Spinner';
 import PageHeader from '../components/molecules/PageHeader';
 import StatCard from '../components/molecules/StatCard';
 import DataTable, { type Column } from '../components/organisms/DataTable';
-import type { Transaction } from '../types';
+import { useAppContext } from '../context/AppContext';
 import { formatCurrency } from '../utils/formatters';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
-interface ReportsTabProps {
-  transactions: Transaction[];
-  loading: boolean;
-}
-
-export default function ReportsTab({ transactions, loading }: ReportsTabProps) {
+export default function ReportsPage() {
+  const { transactions, loading } = useAppContext();
   const [period, setPeriod] = useState('all');
 
   const reportTransactions = useMemo(() => {
@@ -309,7 +305,6 @@ export default function ReportsTab({ transactions, loading }: ReportsTabProps) {
 
       y += 30;
 
-      // Transactions Details List (truncated for brevity as it's the same logic)
       // Save PDF
       doc.save(
         `Laporan-KasKu-Bhineka_Djaya_Primasatya-${(periodText[period] || 'Semua_Waktu').replace(/ /g, '_')}.pdf`,
@@ -376,6 +371,7 @@ export default function ReportsTab({ transactions, loading }: ReportsTabProps) {
               <option value="year">📅 Tahun Ini</option>
             </select>
             <button
+              type="button"
               onClick={handleDownloadPDF}
               className="px-4 py-2 bg-textMain text-white rounded-lg text-[13px] font-medium transition-colors hover:bg-[#333]"
             >

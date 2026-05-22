@@ -1,17 +1,10 @@
 import { useState } from 'react';
 import TransactionTable from '../components/templates/TransactionTable';
-import type { Category, Session, Transaction } from '../types';
+import { useAppContext } from '../context/AppContext';
 
-interface TransactionsTabProps {
-  transactions: Transaction[];
-  categories: Category[];
-  loading: boolean;
-  onEdit: (tx: Transaction) => void;
-  onDelete: (id: number) => void;
-  session: Session | null;
-}
+export default function TransactionsPage() {
+  const { transactions, categories, loading, openTransactionModal, handleDeleteTransaction } = useAppContext();
 
-export default function TransactionsTab({ transactions, categories, loading, onEdit, onDelete }: TransactionsTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedType, setSelectedType] = useState('all');
@@ -168,6 +161,7 @@ export default function TransactionsTab({ transactions, categories, loading, onE
 
           <div className="flex items-end">
             <button
+              type="button"
               onClick={handleResetFilters}
               className="w-full py-2 border border-border rounded-lg bg-transparent text-text2 text-[13px] font-medium hover:bg-surface2 transition-all"
             >
@@ -179,8 +173,8 @@ export default function TransactionsTab({ transactions, categories, loading, onE
 
       <TransactionTable
         transactions={sortedTransactions}
-        onEdit={onEdit}
-        onDelete={onDelete}
+        onEdit={openTransactionModal}
+        onDelete={handleDeleteTransaction}
         loading={loading}
         pagination={true}
         pageSize={10}

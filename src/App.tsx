@@ -1,7 +1,8 @@
+import { RouterProvider } from '@tanstack/react-router';
 import { Toaster } from 'react-hot-toast';
+import { AppProvider } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
-import AuthScreen from './pages/AuthScreen';
-import Dashboard from './pages/Dashboard';
+import { router } from './router';
 
 function App() {
   const { session, loading } = useAuth();
@@ -15,7 +16,7 @@ function App() {
   }
 
   return (
-    <>
+    <AppProvider>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -30,8 +31,8 @@ function App() {
           },
         }}
       />
-      {!session ? <AuthScreen /> : <Dashboard session={session} />}
-    </>
+      <RouterProvider router={router} context={{ session, authLoading: loading }} />
+    </AppProvider>
   );
 }
 

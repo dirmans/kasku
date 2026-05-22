@@ -4,15 +4,13 @@ import ActionButtons from '../components/molecules/ActionButtons';
 import PageHeader from '../components/molecules/PageHeader';
 import StatCard from '../components/molecules/StatCard';
 import DataTable, { type Column } from '../components/organisms/DataTable';
+import { useAppContext } from '../context/AppContext';
 import { useCapital } from '../hooks/useCapital';
-import type { CapitalRecord, Session } from '../types';
+import type { CapitalRecord } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
-interface CapitalTabProps {
-  session: Session | null;
-}
-
-export default function CapitalTab({ session }: CapitalTabProps) {
+export default function CapitalPage() {
+  const { session } = useAppContext();
   const isAuthorized = true;
   const { records, loading, fetchRecords, addRecord, updateRecord, deleteRecord } = useCapital(session);
   const [searchTerm, setSearchTerm] = useState('');
@@ -245,6 +243,7 @@ export default function CapitalTab({ session }: CapitalTabProps) {
         actions={
           isAuthorized && (
             <button
+              type="button"
               onClick={() => {
                 if (showForm) resetForm();
                 else setShowForm(true);
@@ -345,7 +344,7 @@ export default function CapitalTab({ session }: CapitalTabProps) {
                 value={buyPrice ? new Intl.NumberFormat('id-ID').format(Number(buyPrice)) : ''}
                 onChange={(e) => {
                   const rawValue = e.target.value.replace(/\D/g, '');
-                  setBuyPrice(rawValue ? parseInt(rawValue, 10) : '');
+                  setBuyPrice(rawValue ? Number.parseInt(rawValue, 10) : '');
                 }}
                 className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none focus:border-textMain focus:bg-surface"
                 required
@@ -361,7 +360,7 @@ export default function CapitalTab({ session }: CapitalTabProps) {
                 value={sellPrice ? new Intl.NumberFormat('id-ID').format(Number(sellPrice)) : ''}
                 onChange={(e) => {
                   const rawValue = e.target.value.replace(/\D/g, '');
-                  setSellPrice(rawValue ? parseInt(rawValue, 10) : '');
+                  setSellPrice(rawValue ? Number.parseInt(rawValue, 10) : '');
                 }}
                 className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[14px] outline-none focus:border-textMain focus:bg-surface"
                 required

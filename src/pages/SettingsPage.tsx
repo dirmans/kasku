@@ -1,16 +1,12 @@
 import { type FormEvent, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import { useCategories } from '../hooks/useCategories';
 import { useTransactions } from '../hooks/useTransactions';
-import type { Session } from '../types';
 
-interface SettingsTabProps {
-  session: Session | null;
-  onReset?: () => void;
-}
-
-export default function SettingsTab({ session, onReset }: SettingsTabProps) {
+export default function SettingsPage() {
+  const { session, fetchData } = useAppContext();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,7 +62,7 @@ export default function SettingsTab({ session, onReset }: SettingsTabProps) {
       await deleteAllCategories();
 
       toast.success('Seluruh data berhasil dihapus dan kategori default telah disemai ulang!');
-      if (onReset) onReset();
+      await fetchData();
     } catch (error) {
       const err = error as Error;
       toast.error(`Gagal melakukan reset data: ${err.message}`);
