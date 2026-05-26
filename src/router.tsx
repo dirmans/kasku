@@ -19,6 +19,10 @@ import Dashboard from './pages/Dashboard';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import TransactionsPage from './pages/TransactionsPage';
+import CapitalPageV2 from './pages/v2/CapitalPageV2';
+import InvoicesPage from './pages/v2/InvoicesPage';
+import ReportsPageV2 from './pages/v2/ReportsPageV2';
+import SuppliersPage from './pages/v2/SuppliersPage';
 import type { Session } from './types';
 
 // 1. Router Context Type
@@ -77,6 +81,26 @@ function AuthLayout() {
         return {
           title: 'Rekap Modal',
           subtitle: 'Lacak inventaris, harga modal, dan profit',
+        };
+      case '/v2/capital':
+        return {
+          title: 'Rekap Modal (V2)',
+          subtitle: 'Lacak inventaris, harga modal, profit, dan supplier',
+        };
+      case '/v2/suppliers':
+        return {
+          title: 'Supplier (V2)',
+          subtitle: 'Kelola data supplier terhubung dengan aset Anda',
+        };
+      case '/v2/invoices':
+        return {
+          title: 'Nota Transaksi Supplier (V2)',
+          subtitle: 'Kelola transaksi nota, status cicilan, sisa tagihan, dan cetak struk',
+        };
+      case '/v2/reports':
+        return {
+          title: 'Laporan Supplier (V2)',
+          subtitle: 'Analisis perbandingan pembelian modal, penjualan aset, dan profit per supplier',
         };
       case '/settings':
         return {
@@ -192,6 +216,30 @@ export const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+export const capitalV2Route = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: '/v2/capital',
+  component: CapitalPageV2,
+});
+
+export const suppliersRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: '/v2/suppliers',
+  component: SuppliersPage,
+});
+
+export const reportsV2Route = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: '/v2/reports',
+  component: ReportsPageV2,
+});
+
+export const invoicesRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: '/v2/invoices',
+  component: InvoicesPage,
+});
+
 // 7. Route Tree
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -202,6 +250,10 @@ const routeTree = rootRoute.addChildren([
     categoriesRoute,
     capitalRoute,
     settingsRoute,
+    capitalV2Route,
+    suppliersRoute,
+    reportsV2Route,
+    invoicesRoute,
   ]),
 ]);
 

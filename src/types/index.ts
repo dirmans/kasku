@@ -34,6 +34,28 @@ export interface Category {
   created_at?: string;
 }
 
+export interface Supplier {
+  id: number;
+  user_id: string;
+  name: string;
+  contact_info?: string | null;
+  description?: string | null;
+  created_at?: string;
+}
+
+export interface CustomerInvoice {
+  id: number;
+  user_id: string;
+  customer_name: string;
+  invoice_number: string;
+  date: string;
+  status: 'lunas' | 'dp' | 'belum_lunas';
+  total_amount: number;
+  paid_amount: number;
+  note?: string | null;
+  created_at?: string;
+}
+
 export interface CapitalRecord {
   id: number;
   user_id: string;
@@ -44,6 +66,41 @@ export interface CapitalRecord {
   date: string;
   note?: string;
   created_at?: string;
+  supplier_id?: number | null;
+  customer_invoice_id?: number | null;
+  suppliers?: {
+    name: string;
+  } | null;
+}
+
+export interface SupplierPayment {
+  id: number;
+  user_id: string;
+  supplier_id: number;
+  payment_method_id?: number | null;
+  amount: number;
+  payment_date: string;
+  note?: string | null;
+  created_at?: string;
+  payment_methods?: {
+    name: string;
+    emoji?: string;
+  } | null;
+}
+
+export interface CustomerPayment {
+  id: number;
+  user_id: string;
+  customer_invoice_id: number;
+  payment_method_id?: number | null;
+  amount: number;
+  payment_date: string;
+  note?: string | null;
+  created_at?: string;
+  payment_methods?: {
+    name: string;
+    emoji?: string;
+  } | null;
 }
 
 export interface PaymentMethod {
