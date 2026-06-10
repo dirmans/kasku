@@ -82,10 +82,18 @@ export default function InvoicesPage() {
   // Payment History Modal State
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
+  // Receipt Preview Modal State
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+
   const [itemSource, setItemSource] = useState<'new' | 'existing'>('new');
   const [selectedCapitalRecordId, setSelectedCapitalRecordId] = useState<string>('');
   const [stockSearchTerm, setStockSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Weight calculator states for item pricing
+  const [showWeightCalc, setShowWeightCalc] = useState(false);
+  const [weight, setWeight] = useState<number | ''>('');
+  const [pricePerKg, setPricePerKg] = useState<number | ''>('');
 
   useEffect(() => {
     fetchInvoices();
@@ -117,6 +125,9 @@ export default function InvoicesPage() {
     setSelectedCapitalRecordId('');
     setStockSearchTerm('');
     setIsDropdownOpen(false);
+    setWeight('');
+    setPricePerKg('');
+    setShowWeightCalc(false);
   };
 
   const resetItemForm = () => {
@@ -248,6 +259,8 @@ export default function InvoicesPage() {
         customer_invoice_id: selectedInvoiceId,
         supplier_id: supplierId ? Number.parseInt(supplierId, 10) : null,
         user_id: session?.user?.id,
+        weight: showWeightCalc && weight ? Number(weight) : null,
+        price_per_kg: showWeightCalc && pricePerKg ? Number(pricePerKg) : null,
       };
 
       if (itemSource === 'existing' || editingItemId) {
@@ -714,7 +727,7 @@ export default function InvoicesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Nota Transaksi Pelanggan & Supplier (V2)"
+        title="Nota Transaksi Pelanggan (V2)"
         subtitle="Kelola data transaksi nota, cicilan piutang pelanggan, sisa tagihan berjalan, dan cetak struk belanja"
         actions={
           <button
@@ -905,7 +918,7 @@ export default function InvoicesPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={handlePrintBuyerInvoice}
+                onClick={() => setShowReceiptPreview(true)}
                 className="px-3.5 py-1.5 text-[12.5px] font-bold rounded-lg border border-border bg-surface text-text2 hover:bg-surface2 transition-all flex items-center gap-1.5"
               >
                 🖨️ Struk Pembeli
@@ -1249,9 +1262,18 @@ export default function InvoicesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
-                      Harga Jual
-                    </label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-[11px] font-semibold text-text2 uppercase tracking-[0.4px]">
+                        Harga Jual
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowWeightCalc(!showWeightCalc)}
+                        className="text-[11px] font-medium text-accent hover:underline focus:outline-none"
+                      >
+                        {showWeightCalc ? '✕ Tutup Kalkulator' : '⚖️ Hitung dari Berat'}
+                      </button>
+                    </div>
                     <input
                       type="text"
                       placeholder="Dapat dikosongkan"
@@ -1262,6 +1284,57 @@ export default function InvoicesPage() {
                       }}
                       className="w-full p-2 border border-border rounded-lg bg-surface text-textMain text-[13.5px] outline-none focus:border-textMain"
                     />
+
+                    {showWeightCalc && (
+                      <div className="mt-2.5 p-3 bg-surface border border-border rounded-lg space-y-2 animate-in slide-in-from-top-2 duration-200">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">
+                              Berat (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="Misal: 5.5"
+                              value={weight}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : '';
+                                setWeight(val);
+                                if (val && pricePerKg) {
+                                  setSellPrice(Math.round(val * Number(pricePerKg)));
+                                }
+                              }}
+                              className="w-full p-1.5 border border-border rounded bg-surface2 text-textMain text-[12px] outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">
+                              Harga / kg
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Misal: 20.000"
+                              value={pricePerKg ? new Intl.NumberFormat('id-ID').format(Number(pricePerKg)) : ''}
+                              onChange={(e) => {
+                                const rawValue = e.target.value.replace(/\D/g, '');
+                                const val = rawValue ? Number.parseInt(rawValue, 10) : '';
+                                setPricePerKg(val);
+                                if (weight && val) {
+                                  setSellPrice(Math.round(Number(weight) * val));
+                                }
+                              }}
+                              className="w-full p-1.5 border border-border rounded bg-surface2 text-textMain text-[12px] outline-none"
+                            />
+                          </div>
+                        </div>
+                        {weight && pricePerKg && (
+                          <div className="text-[11.5px] text-income font-medium pt-1 flex justify-between items-center border-t border-dashed border-border/80">
+                            <span>Hasil: {weight} kg × {formatCurrency(Number(pricePerKg))}</span>
+                            <span className="font-bold">{formatCurrency(Math.round(Number(weight) * Number(pricePerKg)))}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
@@ -1312,8 +1385,13 @@ export default function InvoicesPage() {
 
                       return (
                         <tr key={item.id} className="border-b border-border/50 hover:bg-surface2/30 transition-colors">
-                          <td className="p-3">
+                           <td className="p-3">
                             <span className="font-semibold text-textMain">{item.item_name}</span>
+                            {item.weight && item.price_per_kg && (
+                              <span className="block text-[11px] font-medium text-accent mt-0.5">
+                                ⚖️ {item.weight} kg @ {formatCurrency(item.price_per_kg)}/kg
+                              </span>
+                            )}
                             {item.note && <span className="block text-[10.5px] text-text3 mt-0.5">{item.note}</span>}
                           </td>
                           <td className="p-3 text-center font-[tnum]">{item.quantity}</td>
@@ -1338,11 +1416,14 @@ export default function InvoicesPage() {
                                 setItemSource('existing');
                                 setSelectedCapitalRecordId(item.id.toString());
                                 setItemName(item.item_name);
-                                setBuyPrice(item.buy_price);
+                               setBuyPrice(item.buy_price);
                                 setSellPrice(item.sell_price ? item.sell_price : '');
                                 setQuantity(item.quantity);
                                 setSupplierId(item.supplier_id ? item.supplier_id.toString() : '');
                                 setItemNote(item.note || '');
+                                setWeight(item.weight || '');
+                                setPricePerKg(item.price_per_kg || '');
+                                setShowWeightCalc(!!item.weight);
                                 setShowItemForm(true);
                               }}
                               onDelete={() => handleDeleteItem(item.id)}
@@ -1355,6 +1436,118 @@ export default function InvoicesPage() {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Preview Modal */}
+      {showReceiptPreview && selectedInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200">
+          <div className="bg-surface rounded-xl border border-border shadow-2xl w-full max-w-sm flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-surface2 rounded-t-xl">
+              <h3 className="font-bold text-[14px]">Pratinjau Struk Penjualan</h3>
+              <button
+                type="button"
+                onClick={() => setShowReceiptPreview(false)}
+                className="text-text3 hover:text-textMain font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.01) 10px, rgba(0,0,0,0.01) 20px)' }}>
+              {/* Thermal Receipt Styling Container */}
+              <div className="font-mono text-[12px] text-textMain leading-relaxed">
+                <div className="text-center mb-4">
+                  <h2 className="text-[16px] font-bold tracking-widest">KASKU SHOP</h2>
+                  <p className="text-[10px] text-text2">Bhineka Djaya Primasatya</p>
+                  <p className="text-[10px] text-text2">Telp: 0812-3456-7890</p>
+                </div>
+                
+                <div className="border-t border-dashed border-border/80 my-3"></div>
+                
+                <div className="grid grid-cols-[auto_1fr] gap-x-2 text-[11px]">
+                  <span>Nota</span><span>: {selectedInvoice.invoice_number}</span>
+                  <span>Tgl</span><span>: {formatDate(selectedInvoice.date)}</span>
+                  <span>Cust</span><span>: {selectedInvoice.customer_name}</span>
+                  <span>Kasir</span><span>: Admin KasKu</span>
+                </div>
+                
+                <div className="border-t border-dashed border-border/80 my-3"></div>
+                
+                <div className="flex justify-between font-bold text-[11px] mb-2">
+                  <span>Barang/Qty</span>
+                  <span>Total</span>
+                </div>
+                
+                <div className="space-y-3">
+                  {selectedInvoiceItems.map((item) => {
+                    const itemTotalSale = Number(item.sell_price) * Number(item.quantity);
+                    return (
+                      <div key={item.id} className="text-[11px]">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="truncate flex-1">{item.item_name}</span>
+                          <span className="font-bold">{formatCurrency(itemTotalSale)}</span>
+                        </div>
+                        <div className="text-text3 ml-2 text-[10px]">
+                          {item.quantity} x {formatCurrency(item.sell_price)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {selectedInvoiceItems.length === 0 && (
+                    <div className="text-center italic text-text3 py-2 text-[10px]">- Belum ada barang -</div>
+                  )}
+                </div>
+                
+                <div className="border-t border-dashed border-border/80 my-3"></div>
+                
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex justify-between font-bold">
+                    <span>TOTAL PENJUALAN:</span>
+                    <span>{formatCurrency(selectedInvoice.total_amount)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>TELAH DIBAYAR:</span>
+                    <span>{formatCurrency(selectedInvoice.status === 'lunas' ? selectedInvoice.total_amount : selectedInvoice.paid_amount)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>SISA PIUTANG:</span>
+                    <span>{formatCurrency(selectedInvoice.status === 'lunas' ? 0 : selectedInvoice.total_amount - selectedInvoice.paid_amount)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between font-bold mt-2 pt-2 border-t border-dotted border-border/50">
+                    <span>STATUS BAYAR:</span>
+                    <span>{selectedInvoice.status === 'lunas' ? 'LUNAS' : selectedInvoice.status.toUpperCase()}</span>
+                  </div>
+                </div>
+                
+                <div className="text-center mt-6 text-[9.5px] text-text3 space-y-0.5">
+                  <p>Terima Kasih Atas Pembelian Anda</p>
+                  <p>Barang yang sudah dibeli</p>
+                  <p>tidak dapat ditukar/dikembalikan.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-border bg-surface2 flex justify-end gap-3 rounded-b-xl">
+              <button
+                type="button"
+                onClick={() => setShowReceiptPreview(false)}
+                className="px-4 py-2 border border-border bg-surface text-text2 rounded-lg text-[13px] font-semibold hover:bg-surface2 transition-colors"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={handlePrintBuyerInvoice}
+                className="px-4 py-2 bg-textMain text-white rounded-lg text-[13px] font-semibold hover:bg-[#333] transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                ⬇️ Download PDF
+              </button>
+            </div>
           </div>
         </div>
       )}

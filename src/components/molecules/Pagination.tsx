@@ -4,6 +4,7 @@ interface PaginationProps {
   totalItems: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
   className?: string;
 }
 
@@ -13,9 +14,10 @@ export default function Pagination({
   totalItems,
   pageSize,
   onPageChange,
+  onPageSizeChange,
   className = '',
 }: PaginationProps) {
-  if (totalPages <= 1) return null;
+  if (totalItems <= 10 && (!onPageSizeChange || pageSize <= 10)) return null;
 
   const indexOfLastItem = currentPage * pageSize;
   const indexOfFirstItem = indexOfLastItem - pageSize;
@@ -24,10 +26,27 @@ export default function Pagination({
     <div
       className={`flex flex-col md:flex-row items-center justify-between gap-4 border-t border-border pt-4 text-[12.5px] text-text2 ${className}`}
     >
-      <div className="text-center md:text-left">
-        Menampilkan <span className="font-semibold text-textMain">{indexOfFirstItem + 1}</span> sampai{' '}
-        <span className="font-semibold text-textMain">{Math.min(indexOfLastItem, totalItems)}</span> dari{' '}
-        <span className="font-semibold text-textMain">{totalItems}</span> data
+      <div className="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
+        <div>
+          Menampilkan <span className="font-semibold text-textMain">{indexOfFirstItem + 1}</span> sampai{' '}
+          <span className="font-semibold text-textMain">{Math.min(indexOfLastItem, totalItems)}</span> dari{' '}
+          <span className="font-semibold text-textMain">{totalItems}</span> data
+        </div>
+        {onPageSizeChange && totalItems > 10 && (
+          <div className="flex items-center gap-2">
+            <span>Tampilkan:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="p-1 border border-border rounded bg-surface2 text-textMain text-[12px] outline-none focus:border-textMain"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        )}
       </div>
       <div className="flex flex-wrap justify-center items-center gap-1.5">
         <button

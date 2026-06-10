@@ -94,12 +94,12 @@ function AuthLayout() {
         };
       case '/v2/invoices':
         return {
-          title: 'Nota Transaksi Supplier (V2)',
+          title: 'Nota Transaksi (V2)',
           subtitle: 'Kelola transaksi nota, status cicilan, sisa tagihan, dan cetak struk',
         };
       case '/v2/reports':
         return {
-          title: 'Laporan Supplier (V2)',
+          title: 'Laporan (V2)',
           subtitle: 'Analisis perbandingan pembelian modal, penjualan aset, dan profit per supplier',
         };
       case '/settings':

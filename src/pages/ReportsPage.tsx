@@ -84,19 +84,25 @@ export default function ReportsPage() {
   }, [reportTransactions]);
 
   const balanceByPaymentMethod = useMemo(() => {
-    const groups: Record<string, number> = {};
+    const groups: Record<string, { income: number; expense: number; balance: number }> = {};
     reportTransactions.forEach((t) => {
       const method = t.method || 'Tunai';
-      if (!groups[method]) groups[method] = 0;
+      if (!groups[method]) {
+        groups[method] = { income: 0, expense: 0, balance: 0 };
+      }
       if (t.type === 'pemasukan') {
-        groups[method] += Number(t.amount);
+        groups[method].income += Number(t.amount);
+        groups[method].balance += Number(t.amount);
       } else {
-        groups[method] -= Number(t.amount);
+        groups[method].expense += Number(t.amount);
+        groups[method].balance -= Number(t.amount);
       }
     });
-    return Object.entries(groups).map(([method, amount]) => ({
+    return Object.entries(groups).map(([method, data]) => ({
       method,
-      amount,
+      income: data.income,
+      expense: data.expense,
+      amount: data.balance,
     }));
   }, [reportTransactions]);
 
@@ -368,12 +374,12 @@ export default function ReportsPage() {
         return false;
       };
 
-      // 1. Sisa Saldo per Jenis Kas
+      // 1. Rincian Saldo & Arus Kas per Jenis Kas
       checkPageLimit(35);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(26, 25, 22);
-      doc.text('Sisa Saldo per Jenis Kas', margin, y);
+      doc.text('Rincian Saldo & Arus Kas per Jenis Kas', margin, y);
       y += 5;
 
       // Table Header for Saldo
@@ -383,6 +389,8 @@ export default function ReportsPage() {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(50, 50, 50);
       doc.text('Jenis Kas', margin + 4, y + 4);
+      doc.text('Pemasukan', margin + contentW - 75, y + 4, { align: 'right' });
+      doc.text('Pengeluaran', margin + contentW - 40, y + 4, { align: 'right' });
       doc.text('Sisa Saldo', margin + contentW - 4, y + 4, { align: 'right' });
       y += 6;
 
@@ -399,6 +407,15 @@ export default function ReportsPage() {
         doc.line(margin, y, margin + contentW, y);
         doc.text(item.method, margin + 4, y + 4.2);
 
+        // Pemasukan
+        doc.setTextColor(26, 107, 74);
+        doc.text(formatCurrency(item.income), margin + contentW - 75, y + 4.2, { align: 'right' });
+
+        // Pengeluaran
+        doc.setTextColor(185, 48, 48);
+        doc.text(formatCurrency(item.expense), margin + contentW - 40, y + 4.2, { align: 'right' });
+
+        // Sisa Saldo
         if (item.amount >= 0) {
           doc.setTextColor(26, 107, 74);
           doc.setFont('helvetica', 'bold');
@@ -587,6 +604,42 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownloadCSV = () => {
+    try {
+      const headers = ['Tanggal', 'Deskripsi', 'Kategori', 'Kas / Metode', 'Jenis', 'Jumlah', 'Catatan'];
+      const rows = reportTransactions.map((t) => [
+        t.date,
+        `"${t.description.replace(/"/g, '""')}"`,
+        `"${(t.category || '-').replace(/"/g, '""')}"`,
+        `"${(t.method || 'Tunai').replace(/"/g, '""')}"`,
+        t.type === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran',
+        t.amount,
+        `"${(t.note || '').replace(/"/g, '""')}"`,
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+      const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      const periodText: Record<string, string> = {
+        all: 'Semua_Waktu',
+        month: 'Bulan_Ini',
+        '3months': '3_Bulan_Terakhir',
+        year: 'Tahun_Ini',
+      };
+      link.setAttribute('download', `Laporan-Transaksi-${periodText[period] || 'Semua_Waktu'}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('📄 Berhasil mengekspor laporan transaksi ke file CSV!');
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      toast.error('Gagal mengekspor CSV.');
+    }
+  };
+
   const expenseColumns: Column<ExpenseCategoryRow>[] = [
     { key: 'category', label: 'Kategori', sortable: true },
     {
@@ -623,8 +676,22 @@ export default function ReportsPage() {
     },
   ];
 
-  const balanceColumns: Column<{ method: string; amount: number }>[] = [
+  const balanceColumns: Column<{ method: string; income: number; expense: number; amount: number }>[] = [
     { key: 'method', label: 'Jenis Kas', sortable: true },
+    {
+      key: 'income',
+      label: 'Total Pemasukan',
+      align: 'right',
+      sortable: true,
+      render: (r) => <span className="font-semibold text-income font-[tnum]">{formatCurrency(r.income)}</span>,
+    },
+    {
+      key: 'expense',
+      label: 'Total Pengeluaran',
+      align: 'right',
+      sortable: true,
+      render: (r) => <span className="font-semibold text-expense font-[tnum]">{formatCurrency(r.expense)}</span>,
+    },
     {
       key: 'amount',
       label: 'Sisa Saldo',
@@ -660,7 +727,14 @@ export default function ReportsPage() {
               onClick={handleDownloadPDF}
               className="px-4 py-2 bg-textMain text-white rounded-lg text-[13px] font-medium transition-colors hover:bg-[#333]"
             >
-              📥 Unduh Laporan PDF
+              🖨️ Unduh Laporan PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadCSV}
+              className="px-4 py-2 bg-surface border border-border text-text2 hover:bg-surface2 hover:text-textMain rounded-lg text-[13px] font-medium transition-colors"
+            >
+              📥 Ekspor CSV
             </button>
           </div>
         }
@@ -718,6 +792,7 @@ export default function ReportsPage() {
         loading={loading}
         defaultSortKey="amount"
         emptyMessage="Belum ada catatan pengeluaran pada periode ini."
+        pagination={true}
         mobileCard={(r) => {
           const total = expenseByCategory.reduce((a, d) => a + d.amount, 0);
           const pct = ((r.amount / total) * 100).toFixed(1);
@@ -746,18 +821,25 @@ export default function ReportsPage() {
       />
 
       <DataTable
-        title="Rincian Sisa Saldo per Jenis Kas"
+        title="Rincian Saldo & Arus Kas per Jenis Kas"
         columns={balanceColumns}
         data={balanceByPaymentMethod}
         keyExtractor={(r) => r.method}
         loading={loading}
         defaultSortKey="amount"
         emptyMessage="Belum ada catatan saldo jenis kas pada periode ini."
+        pagination={true}
         mobileCard={(r) => (
-          <div className="flex items-center justify-between">
-            <div className="font-semibold text-textMain text-[14px]">{r.method}</div>
-            <div className={`font-bold text-[14px] font-[tnum] ${r.amount >= 0 ? 'text-income' : 'text-expense'}`}>
-              {formatCurrency(r.amount)}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold text-textMain text-[14px]">{r.method}</div>
+              <div className={`font-bold text-[14px] font-[tnum] ${r.amount >= 0 ? 'text-income' : 'text-expense'}`}>
+                {formatCurrency(r.amount)}
+              </div>
+            </div>
+            <div className="flex justify-between text-[11px] text-text3 pt-1 border-t border-dashed border-border">
+              <span>Masuk: <span className="text-income font-medium font-[tnum]">{formatCurrency(r.income)}</span></span>
+              <span>Keluar: <span className="text-expense font-medium font-[tnum]">{formatCurrency(r.expense)}</span></span>
             </div>
           </div>
         )}

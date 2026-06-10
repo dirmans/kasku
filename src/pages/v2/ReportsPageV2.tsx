@@ -549,7 +549,42 @@ export default function ReportsPageV2() {
       toast.success('📄 Laporan Finansial Komprehensif PDF berhasil diunduh!');
     } catch (error) {
       console.error('Error generating PDF comprehensive report:', error);
-      toast.error('Gagal mengekspor laporan PDF.');
+    }
+  };
+  const handleDownloadCSV = () => {
+    try {
+      const headers = ['Tanggal', 'Nama Barang', 'Supplier', 'Kuantitas', 'Berat (kg)', 'Harga / kg', 'Harga Beli', 'Harga Jual', 'Estimasi Profit', 'Catatan'];
+      const rows = filteredCapitalRecords.map((r) => {
+        const supplierName = r.suppliers?.name || '-';
+        const profit = Number(r.sell_price) > 0 ? (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity) : 0;
+        return [
+          r.date,
+          `"${r.item_name.replace(/"/g, '""')}"`,
+          `"${supplierName.replace(/"/g, '""')}"`,
+          r.quantity,
+          r.weight || '',
+          r.price_per_kg || '',
+          r.buy_price,
+          r.sell_price,
+          profit,
+          `"${(r.note || '').replace(/"/g, '""')}"`,
+        ];
+      });
+
+      const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+      const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Rincian-Inventaris-Modal-V2-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('📄 Rincian Inventaris berhasil diunduh dalam format CSV!');
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      toast.error('Gagal mengunduh CSV.');
     }
   };
 
@@ -611,6 +646,121 @@ export default function ReportsPageV2() {
         return (
           <span className={`font-[tnum] font-semibold ${isDebt ? 'text-expense' : 'text-income'}`}>
             {formatCurrency(r.remaining)}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const supplierColumns: Column<SupplierPerformanceRow>[] = [
+    { key: 'name', label: 'Nama Supplier', sortable: true },
+    {
+      key: 'itemsCount',
+      label: 'Jumlah Aset',
+      align: 'center',
+      sortable: true,
+      render: (r) => <span className="font-semibold">{r.itemsCount} barang</span>,
+    },
+    {
+      key: 'totalCapital',
+      label: 'Total Belanja Modal',
+      align: 'right',
+      sortable: true,
+      render: (r) => <span className="font-[tnum] text-expense font-semibold">{formatCurrency(r.totalCapital)}</span>,
+    },
+    {
+      key: 'estimatedSale',
+      label: 'Estimasi Jual',
+      align: 'right',
+      sortable: true,
+      render: (r) => <span className="font-[tnum] text-income font-semibold">{formatCurrency(r.estimatedSale)}</span>,
+    },
+    {
+      key: 'profit',
+      label: 'Estimasi Profit',
+      align: 'right',
+      sortable: true,
+      render: (r) => (
+        <span className={`font-[tnum] font-bold ${r.profit >= 0 ? 'text-income' : 'text-expense'}`}>
+          {r.profit >= 0 ? '+' : ''}
+          {formatCurrency(r.profit)}
+        </span>
+      ),
+    },
+  ];
+
+  const capitalColumns: Column<any>[] = [
+    {
+      key: 'date',
+      label: 'Tanggal',
+      sortable: true,
+      render: (r) => formatDate(r.date),
+    },
+    {
+      key: 'item_name',
+      label: 'Barang / Modal',
+      sortable: true,
+      render: (r) => (
+        <div>
+          <div className="font-semibold text-textMain">{r.item_name}</div>
+          {r.weight && r.price_per_kg && (
+            <div className="text-[11px] font-medium text-accent mt-0.5">
+              ⚖️ {r.weight} kg @ {formatCurrency(r.price_per_kg)}/kg
+            </div>
+          )}
+          {r.note && <div className="text-[11px] text-text3 mt-0.5">{r.note}</div>}
+        </div>
+      ),
+    },
+    {
+      key: 'supplier',
+      label: 'Supplier',
+      render: (r) => (
+        <span className="text-[12.5px] font-semibold text-accent">
+          {r.suppliers?.name ? `🏢 ${r.suppliers.name}` : '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'quantity',
+      label: 'Qty',
+      align: 'center',
+      sortable: true,
+      render: (r) => <span className="font-[tnum]">{r.quantity}</span>,
+    },
+    {
+      key: 'buy_price',
+      label: 'Harga Beli',
+      align: 'right',
+      sortable: true,
+      render: (r) => <span className="font-[tnum] text-expense">{formatCurrency(r.buy_price)}</span>,
+    },
+    {
+      key: 'sell_price',
+      label: 'Harga Jual',
+      align: 'right',
+      sortable: true,
+      render: (r) => {
+        if (Number(r.sell_price) === 0) {
+          return <span className="text-[11.5px] text-text3 italic">Belum terjual</span>;
+        }
+        return <span className="font-[tnum] text-income">{formatCurrency(r.sell_price)}</span>;
+      },
+    },
+    {
+      key: 'profit',
+      label: 'Profit Estimasi',
+      align: 'right',
+      sortable: true,
+      render: (r) => {
+        if (Number(r.sell_price) === 0) {
+          return <span className="text-text3">-</span>;
+        }
+        const profitVal = (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity);
+        return (
+          <span className={`font-[tnum] font-bold ${profitVal >= 0 ? 'text-income' : 'text-expense'}`}>
+            {profitVal > 0 ? '+' : ''}
+            {formatCurrency(profitVal)}
           </span>
         );
       },
@@ -756,6 +906,7 @@ export default function ReportsPageV2() {
         loading={isLoading}
         defaultSortKey="total_amount"
         emptyMessage="Belum ada data nota penjualan pelanggan."
+        pagination={true}
         mobileCard={(c) => (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -780,6 +931,102 @@ export default function ReportsPageV2() {
             </div>
           </div>
         )}
+      />
+
+      {/* Supplier Performance Table */}
+      <DataTable
+        title="Laporan Performa Keuntungan Supplier"
+        columns={supplierColumns}
+        data={supplierReports}
+        keyExtractor={(r) => r.id}
+        loading={isLoading}
+        defaultSortKey="profit"
+        emptyMessage="Belum ada data performa supplier."
+        pagination={true}
+        mobileCard={(s) => (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <div className="font-semibold text-textMain text-[14px]">🏢 {s.name}</div>
+              <div className="text-[11.5px] text-text3">{s.itemsCount} barang</div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[12px] pt-2 border-t border-border/50">
+              <div>
+                <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Total Modal</div>
+                <div className="font-semibold text-expense">{formatCurrency(s.totalCapital)}</div>
+              </div>
+              <div>
+                <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Estimasi Jual</div>
+                <div className="font-semibold text-income">{formatCurrency(s.estimatedSale)}</div>
+              </div>
+              <div>
+                <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Profit</div>
+                <div className={`font-bold ${s.profit >= 0 ? 'text-income' : 'text-expense'}`}>
+                  {formatCurrency(s.profit)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      />
+
+      {/* Capital Records Detail Table */}
+      <DataTable
+        title="Rincian Inventaris & Barang Modal V2"
+        actions={
+          <button
+            type="button"
+            onClick={handleDownloadCSV}
+            className="px-3 py-1 bg-surface border border-border text-text2 hover:bg-surface2 hover:text-textMain rounded-lg text-[12.5px] font-semibold transition-colors flex items-center gap-1.5"
+          >
+            📥 Ekspor CSV
+          </button>
+        }
+        columns={capitalColumns}
+        data={filteredCapitalRecords}
+        keyExtractor={(r) => r.id}
+        loading={isLoading}
+        defaultSortKey="date"
+        emptyMessage="Belum ada data barang modal/inventaris."
+        pagination={true}
+        mobileCard={(r) => {
+          const profitVal = (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity);
+          const hasSold = Number(r.sell_price) > 0;
+          return (
+            <div className="space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-semibold text-textMain text-[14px]">{r.item_name}</div>
+                  <div className="text-[11px] text-text3 mt-0.5">{formatDate(r.date)} • Qty: {r.quantity}</div>
+                  {r.weight && r.price_per_kg && (
+                    <div className="text-[11px] font-semibold text-accent mt-0.5">
+                      ⚖️ {r.weight} kg @ {formatCurrency(r.price_per_kg)}/kg
+                    </div>
+                  )}
+                  {r.suppliers?.name && <div className="text-[11px] font-semibold text-accent mt-0.5">🏢 {r.suppliers.name}</div>}
+                  {r.note && <div className="text-[11px] text-text2 mt-1 italic">{r.note}</div>}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[12px] pt-2 border-t border-border/50">
+                <div>
+                  <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Harga Beli</div>
+                  <div className="font-semibold text-expense">{formatCurrency(r.buy_price)}</div>
+                </div>
+                <div>
+                  <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Harga Jual</div>
+                  <div className="font-semibold text-income">
+                    {hasSold ? formatCurrency(r.sell_price) : <span className="italic text-[11px] text-text3">Belum</span>}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Profit</div>
+                  <div className={`font-bold ${profitVal >= 0 && hasSold ? 'text-income' : 'text-text3'}`}>
+                    {hasSold ? formatCurrency(profitVal) : '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }}
       />
     </div>
   );

@@ -46,6 +46,7 @@ export default function DataTable<T>({
   actions,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentSize, setCurrentSize] = useState(pageSize);
   const [sortKey, setSortKey] = useState<string | undefined>(defaultSortKey);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(defaultSortDirection);
 
@@ -61,6 +62,11 @@ export default function DataTable<T>({
     if (onSort) {
       onSort(key, newDirection);
     }
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setCurrentSize(newSize);
+    setCurrentPage(1); // Reset to first page when changing size
   };
 
   // Sorting Logic
@@ -91,9 +97,9 @@ export default function DataTable<T>({
 
   // Pagination Logic
   const totalItems = sortedData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const indexOfLastItem = currentPage * pageSize;
-  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const totalPages = Math.ceil(totalItems / currentSize);
+  const indexOfLastItem = currentPage * currentSize;
+  const indexOfFirstItem = indexOfLastItem - currentSize;
 
   const currentItems = useMemo(() => {
     if (!pagination) return sortedData;
@@ -171,13 +177,14 @@ export default function DataTable<T>({
           </div>
 
           {/* Pagination */}
-          {pagination && totalPages > 1 && (
+          {pagination && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               totalItems={totalItems}
-              pageSize={pageSize}
+              pageSize={currentSize}
               onPageChange={setCurrentPage}
+              onPageSizeChange={handlePageSizeChange}
             />
           )}
         </div>
