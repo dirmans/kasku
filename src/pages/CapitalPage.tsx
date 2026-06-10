@@ -1,5 +1,5 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import ActionButtons from '../components/molecules/ActionButtons';
 import PageHeader from '../components/molecules/PageHeader';
@@ -151,7 +151,17 @@ export default function CapitalPage() {
 
   const handleDownloadCSV = () => {
     try {
-      const headers = ['Tanggal', 'Barang/Modal', 'Kuantitas (Qty)', 'Harga Beli (Satuan)', 'Harga Jual (Satuan)', 'Total Beli', 'Total Jual', 'Profit Estimasi', 'Catatan'];
+      const headers = [
+        'Tanggal',
+        'Barang/Modal',
+        'Kuantitas (Qty)',
+        'Harga Beli (Satuan)',
+        'Harga Jual (Satuan)',
+        'Total Beli',
+        'Total Jual',
+        'Profit Estimasi',
+        'Catatan',
+      ];
       const rows = processedRecords.map((r) => {
         const totalBuy = Number(r.buy_price) * Number(r.quantity);
         const totalSell = Number(r.sell_price) * Number(r.quantity);
@@ -212,7 +222,11 @@ export default function CapitalPage() {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(160, 158, 150);
       doc.text('Bhineka Djaya Primasatya', margin, 20);
-      doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, 25);
+      doc.text(
+        `Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        margin,
+        25,
+      );
       doc.text(`${processedRecords.length} item disaring`, pageW - margin, 20, { align: 'right' });
 
       let y = 45;
@@ -339,7 +353,6 @@ export default function CapitalPage() {
       toast.error('Gagal mengekspor laporan PDF.');
     }
   };
-
 
   const columns: Column<CapitalRecord & { profit: number }>[] = [
     {

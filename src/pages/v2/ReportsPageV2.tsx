@@ -553,7 +553,18 @@ export default function ReportsPageV2() {
   };
   const handleDownloadCSV = () => {
     try {
-      const headers = ['Tanggal', 'Nama Barang', 'Supplier', 'Kuantitas', 'Berat (kg)', 'Harga / kg', 'Harga Beli', 'Harga Jual', 'Estimasi Profit', 'Catatan'];
+      const headers = [
+        'Tanggal',
+        'Nama Barang',
+        'Supplier',
+        'Kuantitas',
+        'Berat (kg)',
+        'Harga / kg',
+        'Harga Beli',
+        'Harga Jual',
+        'Estimasi Profit',
+        'Catatan',
+      ];
       const rows = filteredCapitalRecords.map((r) => {
         const supplierName = r.suppliers?.name || '-';
         const profit = Number(r.sell_price) > 0 ? (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity) : 0;
@@ -996,13 +1007,17 @@ export default function ReportsPageV2() {
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-semibold text-textMain text-[14px]">{r.item_name}</div>
-                  <div className="text-[11px] text-text3 mt-0.5">{formatDate(r.date)} • Qty: {r.quantity}</div>
+                  <div className="text-[11px] text-text3 mt-0.5">
+                    {formatDate(r.date)} • Qty: {r.quantity}
+                  </div>
                   {r.weight && r.price_per_kg && (
                     <div className="text-[11px] font-semibold text-accent mt-0.5">
                       ⚖️ {r.weight} kg @ {formatCurrency(r.price_per_kg)}/kg
                     </div>
                   )}
-                  {r.suppliers?.name && <div className="text-[11px] font-semibold text-accent mt-0.5">🏢 {r.suppliers.name}</div>}
+                  {r.suppliers?.name && (
+                    <div className="text-[11px] font-semibold text-accent mt-0.5">🏢 {r.suppliers.name}</div>
+                  )}
                   {r.note && <div className="text-[11px] text-text2 mt-1 italic">{r.note}</div>}
                 </div>
               </div>
@@ -1014,7 +1029,11 @@ export default function ReportsPageV2() {
                 <div>
                   <div className="text-text3 text-[9px] uppercase font-semibold mb-0.5">Harga Jual</div>
                   <div className="font-semibold text-income">
-                    {hasSold ? formatCurrency(r.sell_price) : <span className="italic text-[11px] text-text3">Belum</span>}
+                    {hasSold ? (
+                      formatCurrency(r.sell_price)
+                    ) : (
+                      <span className="italic text-[11px] text-text3">Belum</span>
+                    )}
                   </div>
                 </div>
                 <div>

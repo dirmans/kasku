@@ -1,5 +1,5 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import ActionButtons from '../../components/molecules/ActionButtons';
 import PageHeader from '../../components/molecules/PageHeader';
@@ -201,7 +201,7 @@ export default function CapitalPageV2() {
         const totalSell = Number(r.sell_price) * Number(r.quantity);
         const hasSold = Number(r.sell_price) > 0;
         const profit = hasSold ? (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity) : 0;
-        
+
         let itemNameWithDetails = r.item_name;
         if (r.weight && r.price_per_kg) {
           itemNameWithDetails += ` (${r.weight} kg @ ${r.price_per_kg}/kg)`;
@@ -264,7 +264,11 @@ export default function CapitalPageV2() {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(160, 158, 150);
       doc.text('Bhineka Djaya Primasatya', margin, 20);
-      doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, 25);
+      doc.text(
+        `Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        margin,
+        25,
+      );
       doc.text(`${processedRecords.length} item disaring`, pageW - margin, 20, { align: 'right' });
 
       let y = 45;
@@ -324,7 +328,7 @@ export default function CapitalPageV2() {
           const dateStr = formatDate(r.date);
           let itemStr = r.item_name || '-';
           if (r.weight && r.price_per_kg) {
-            itemStr += ` (${r.weight}kg@${Math.round(r.price_per_kg/1000)}k)`;
+            itemStr += ` (${r.weight}kg@${Math.round(r.price_per_kg / 1000)}k)`;
           }
           if (r.note) itemStr += ` (${r.note})`;
           if (itemStr.length > 34) {
@@ -335,7 +339,7 @@ export default function CapitalPageV2() {
           const buyStr = formatCurrency(r.buy_price);
           const hasSold = Number(r.sell_price) > 0;
           const sellStr = hasSold ? formatCurrency(r.sell_price) : 'Belum';
-          
+
           const marginVal = hasSold ? (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity) : 0;
           const profitStr = hasSold ? (marginVal > 0 ? '+' : '') + formatCurrency(marginVal) : '-';
 
@@ -405,7 +409,6 @@ export default function CapitalPageV2() {
       toast.error('Gagal mengekspor laporan PDF.');
     }
   };
-
 
   const columns: Column<CapitalRecord & { profit: number }>[] = [
     {
@@ -592,50 +595,50 @@ export default function CapitalPageV2() {
             <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
               Cari Inventaris / Barang
             </label>
-          <input
-            type="text"
-            placeholder="Nama barang, supplier, catatan..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
-            Filter Supplier
-          </label>
-          <select
-            value={filterSupplierId}
-            onChange={(e) => setFilterSupplierId(e.target.value)}
-            className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
-          >
-            <option value="all">📦 Semua Supplier</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id.toString()}>
-                🏢 {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
-            Urutkan
-          </label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
-          >
-            <option value="date_desc">📅 Tanggal Terbaru</option>
-            <option value="date_asc">📅 Tanggal Terlama</option>
-            <option value="profit_desc">💰 Profit Tertinggi</option>
-            <option value="profit_asc">💰 Profit Terendah</option>
-            <option value="name_asc">🔤 Nama (A-Z)</option>
-            <option value="name_desc">🔤 Nama (Z-A)</option>
-          </select>
+            <input
+              type="text"
+              placeholder="Nama barang, supplier, catatan..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+              Filter Supplier
+            </label>
+            <select
+              value={filterSupplierId}
+              onChange={(e) => setFilterSupplierId(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            >
+              <option value="all">📦 Semua Supplier</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id.toString()}>
+                  🏢 {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+              Urutkan
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            >
+              <option value="date_desc">📅 Tanggal Terbaru</option>
+              <option value="date_asc">📅 Tanggal Terlama</option>
+              <option value="profit_desc">💰 Profit Tertinggi</option>
+              <option value="profit_asc">💰 Profit Terendah</option>
+              <option value="name_asc">🔤 Nama (A-Z)</option>
+              <option value="name_desc">🔤 Nama (Z-A)</option>
+            </select>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -682,7 +685,7 @@ export default function CapitalPageV2() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-             <div>
+            <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-[12px] font-semibold text-text2 uppercase tracking-[0.4px]">
                   Harga Beli (Satuan)
@@ -711,9 +714,7 @@ export default function CapitalPageV2() {
                 <div className="mt-2.5 p-3 bg-surface2 border border-border rounded-lg space-y-2 animate-in slide-in-from-top-2 duration-200">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">
-                        Berat (kg)
-                      </label>
+                      <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">Berat (kg)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -730,9 +731,7 @@ export default function CapitalPageV2() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">
-                        Harga / kg
-                      </label>
+                      <label className="block text-[10px] font-semibold text-text3 uppercase mb-1">Harga / kg</label>
                       <input
                         type="text"
                         placeholder="Misal: 20.000"
@@ -751,8 +750,12 @@ export default function CapitalPageV2() {
                   </div>
                   {weight && pricePerKg && (
                     <div className="text-[11.5px] text-income font-medium pt-1 flex justify-between items-center border-t border-dashed border-border/85">
-                      <span>Hasil: {weight} kg × {formatCurrency(Number(pricePerKg))}</span>
-                      <span className="font-bold">{formatCurrency(Math.round(Number(weight) * Number(pricePerKg)))}</span>
+                      <span>
+                        Hasil: {weight} kg × {formatCurrency(Number(pricePerKg))}
+                      </span>
+                      <span className="font-bold">
+                        {formatCurrency(Math.round(Number(weight) * Number(pricePerKg)))}
+                      </span>
                     </div>
                   )}
                 </div>

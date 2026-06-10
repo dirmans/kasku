@@ -838,8 +838,12 @@ export default function ReportsPage() {
               </div>
             </div>
             <div className="flex justify-between text-[11px] text-text3 pt-1 border-t border-dashed border-border">
-              <span>Masuk: <span className="text-income font-medium font-[tnum]">{formatCurrency(r.income)}</span></span>
-              <span>Keluar: <span className="text-expense font-medium font-[tnum]">{formatCurrency(r.expense)}</span></span>
+              <span>
+                Masuk: <span className="text-income font-medium font-[tnum]">{formatCurrency(r.income)}</span>
+              </span>
+              <span>
+                Keluar: <span className="text-expense font-medium font-[tnum]">{formatCurrency(r.expense)}</span>
+              </span>
             </div>
           </div>
         )}

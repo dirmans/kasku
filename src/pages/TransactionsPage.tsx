@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import TransactionTable from '../components/templates/TransactionTable';
 import { useAppContext } from '../context/AppContext';
@@ -124,7 +124,11 @@ export default function TransactionsPage() {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(160, 158, 150);
       doc.text('Bhineka Djaya Primasatya', margin, 20);
-      doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, 25);
+      doc.text(
+        `Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        margin,
+        25,
+      );
       doc.text(`${sortedTransactions.length} transaksi disaring`, pageW - margin, 20, { align: 'right' });
 
       let y = 45;

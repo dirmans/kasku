@@ -1329,8 +1329,12 @@ export default function InvoicesPage() {
                         </div>
                         {weight && pricePerKg && (
                           <div className="text-[11.5px] text-income font-medium pt-1 flex justify-between items-center border-t border-dashed border-border/80">
-                            <span>Hasil: {weight} kg × {formatCurrency(Number(pricePerKg))}</span>
-                            <span className="font-bold">{formatCurrency(Math.round(Number(weight) * Number(pricePerKg)))}</span>
+                            <span>
+                              Hasil: {weight} kg × {formatCurrency(Number(pricePerKg))}
+                            </span>
+                            <span className="font-bold">
+                              {formatCurrency(Math.round(Number(weight) * Number(pricePerKg)))}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -1385,7 +1389,7 @@ export default function InvoicesPage() {
 
                       return (
                         <tr key={item.id} className="border-b border-border/50 hover:bg-surface2/30 transition-colors">
-                           <td className="p-3">
+                          <td className="p-3">
                             <span className="font-semibold text-textMain">{item.item_name}</span>
                             {item.weight && item.price_per_kg && (
                               <span className="block text-[11px] font-medium text-accent mt-0.5">
@@ -1416,7 +1420,7 @@ export default function InvoicesPage() {
                                 setItemSource('existing');
                                 setSelectedCapitalRecordId(item.id.toString());
                                 setItemName(item.item_name);
-                               setBuyPrice(item.buy_price);
+                                setBuyPrice(item.buy_price);
                                 setSellPrice(item.sell_price ? item.sell_price : '');
                                 setQuantity(item.quantity);
                                 setSupplierId(item.supplier_id ? item.supplier_id.toString() : '');
@@ -1454,8 +1458,14 @@ export default function InvoicesPage() {
                 ✕
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.01) 10px, rgba(0,0,0,0.01) 20px)' }}>
+
+            <div
+              className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-surface"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.01) 10px, rgba(0,0,0,0.01) 20px)',
+              }}
+            >
               {/* Thermal Receipt Styling Container */}
               <div className="font-mono text-[12px] text-textMain leading-relaxed">
                 <div className="text-center mb-4">
@@ -1463,23 +1473,27 @@ export default function InvoicesPage() {
                   <p className="text-[10px] text-text2">Bhineka Djaya Primasatya</p>
                   <p className="text-[10px] text-text2">Telp: 0812-3456-7890</p>
                 </div>
-                
+
                 <div className="border-t border-dashed border-border/80 my-3"></div>
-                
+
                 <div className="grid grid-cols-[auto_1fr] gap-x-2 text-[11px]">
-                  <span>Nota</span><span>: {selectedInvoice.invoice_number}</span>
-                  <span>Tgl</span><span>: {formatDate(selectedInvoice.date)}</span>
-                  <span>Cust</span><span>: {selectedInvoice.customer_name}</span>
-                  <span>Kasir</span><span>: Admin KasKu</span>
+                  <span>Nota</span>
+                  <span>: {selectedInvoice.invoice_number}</span>
+                  <span>Tgl</span>
+                  <span>: {formatDate(selectedInvoice.date)}</span>
+                  <span>Cust</span>
+                  <span>: {selectedInvoice.customer_name}</span>
+                  <span>Kasir</span>
+                  <span>: Admin KasKu</span>
                 </div>
-                
+
                 <div className="border-t border-dashed border-border/80 my-3"></div>
-                
+
                 <div className="flex justify-between font-bold text-[11px] mb-2">
                   <span>Barang/Qty</span>
                   <span>Total</span>
                 </div>
-                
+
                 <div className="space-y-3">
                   {selectedInvoiceItems.map((item) => {
                     const itemTotalSale = Number(item.sell_price) * Number(item.quantity);
@@ -1499,31 +1513,41 @@ export default function InvoicesPage() {
                     <div className="text-center italic text-text3 py-2 text-[10px]">- Belum ada barang -</div>
                   )}
                 </div>
-                
+
                 <div className="border-t border-dashed border-border/80 my-3"></div>
-                
+
                 <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between font-bold">
                     <span>TOTAL PENJUALAN:</span>
                     <span>{formatCurrency(selectedInvoice.total_amount)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>TELAH DIBAYAR:</span>
-                    <span>{formatCurrency(selectedInvoice.status === 'lunas' ? selectedInvoice.total_amount : selectedInvoice.paid_amount)}</span>
+                    <span>
+                      {formatCurrency(
+                        selectedInvoice.status === 'lunas' ? selectedInvoice.total_amount : selectedInvoice.paid_amount,
+                      )}
+                    </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>SISA PIUTANG:</span>
-                    <span>{formatCurrency(selectedInvoice.status === 'lunas' ? 0 : selectedInvoice.total_amount - selectedInvoice.paid_amount)}</span>
+                    <span>
+                      {formatCurrency(
+                        selectedInvoice.status === 'lunas'
+                          ? 0
+                          : selectedInvoice.total_amount - selectedInvoice.paid_amount,
+                      )}
+                    </span>
                   </div>
-                  
+
                   <div className="flex justify-between font-bold mt-2 pt-2 border-t border-dotted border-border/50">
                     <span>STATUS BAYAR:</span>
                     <span>{selectedInvoice.status === 'lunas' ? 'LUNAS' : selectedInvoice.status.toUpperCase()}</span>
                   </div>
                 </div>
-                
+
                 <div className="text-center mt-6 text-[9.5px] text-text3 space-y-0.5">
                   <p>Terima Kasih Atas Pembelian Anda</p>
                   <p>Barang yang sudah dibeli</p>
@@ -1531,7 +1555,7 @@ export default function InvoicesPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-border bg-surface2 flex justify-end gap-3 rounded-b-xl">
               <button
                 type="button"
