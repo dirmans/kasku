@@ -1,3 +1,4 @@
+import { jsPDF } from 'jspdf';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import ActionButtons from '../components/molecules/ActionButtons';
@@ -148,6 +149,211 @@ export default function CapitalPage() {
     }));
   }, [sortedRecords]);
 
+  const handleDownloadCSV = () => {
+    try {
+      const headers = [
+        'Tanggal',
+        'Barang/Modal',
+        'Kuantitas (Qty)',
+        'Harga Beli (Satuan)',
+        'Harga Jual (Satuan)',
+        'Total Beli',
+        'Total Jual',
+        'Profit Estimasi',
+        'Catatan',
+      ];
+      const rows = processedRecords.map((r) => {
+        const totalBuy = Number(r.buy_price) * Number(r.quantity);
+        const totalSell = Number(r.sell_price) * Number(r.quantity);
+        const profit = (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity);
+        return [
+          r.date,
+          `"${r.item_name.replace(/"/g, '""')}"`,
+          r.quantity,
+          r.buy_price,
+          r.sell_price,
+          totalBuy,
+          totalSell,
+          profit,
+          `"${(r.note || '').replace(/"/g, '""')}"`,
+        ];
+      });
+
+      const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+      const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Detail-Modal-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('📄 Berhasil mengekspor detail modal ke file CSV!');
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      toast.error('Gagal mengekspor CSV.');
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageW = 210;
+      const margin = 15;
+      const contentW = pageW - margin * 2;
+
+      // Header Banner
+      doc.setFillColor(26, 25, 22);
+      doc.rect(0, 0, pageW, 35, 'F');
+
+      // Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('KasKu - Laporan Detail Modal & Stok', margin, 14);
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(160, 158, 150);
+      doc.text('Bhineka Djaya Primasatya', margin, 20);
+      doc.text(
+        `Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        margin,
+        25,
+      );
+      doc.text(`${processedRecords.length} item disaring`, pageW - margin, 20, { align: 'right' });
+
+      let y = 45;
+
+      const colX = {
+        date: margin,
+        item: margin + 22,
+        qty: margin + 85,
+        buy: margin + 105,
+        sell: margin + 135,
+        profit: margin + contentW,
+      };
+
+      const drawHeader = (yPos: number) => {
+        doc.setFillColor(245, 245, 240);
+        doc.rect(margin, yPos, contentW, 6, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Tanggal', colX.date, yPos + 4);
+        doc.text('Barang / Modal', colX.item, yPos + 4);
+        doc.text('Qty', colX.qty, yPos + 4, { align: 'center' });
+        doc.text('Harga Beli', colX.buy, yPos + 4, { align: 'right' });
+        doc.text('Harga Jual', colX.sell, yPos + 4, { align: 'right' });
+        doc.text('Estimasi Profit', colX.profit, yPos + 4, { align: 'right' });
+      };
+
+      drawHeader(y);
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+
+      if (processedRecords.length === 0) {
+        doc.text('Tidak ada data modal yang cocok dengan filter.', margin + 2, y + 4.2);
+        y += 6;
+      } else {
+        processedRecords.forEach((r, idx) => {
+          if (y + 10 > 280) {
+            doc.addPage();
+            y = 20;
+            drawHeader(y);
+            y += 6;
+          }
+
+          if (idx % 2 === 0) {
+            doc.setFillColor(252, 252, 250);
+            doc.rect(margin, y, contentW, 6, 'F');
+          }
+
+          doc.setDrawColor(230, 230, 225);
+          doc.setLineWidth(0.1);
+          doc.line(margin, y, margin + contentW, y);
+
+          const dateStr = formatDate(r.date);
+          let itemStr = r.item_name || '-';
+          if (r.note) itemStr += ` (${r.note})`;
+          if (itemStr.length > 40) {
+            itemStr = `${itemStr.substring(0, 37)}...`;
+          }
+
+          const buyStr = formatCurrency(r.buy_price);
+          const sellStr = formatCurrency(r.sell_price);
+          const marginVal = (Number(r.sell_price) - Number(r.buy_price)) * Number(r.quantity);
+          const profitStr = (marginVal > 0 ? '+' : '') + formatCurrency(marginVal);
+
+          doc.text(dateStr, colX.date, y + 4.2);
+          doc.text(itemStr, colX.item, y + 4.2);
+          doc.text(String(r.quantity), colX.qty, y + 4.2, { align: 'center' });
+          doc.text(buyStr, colX.buy, y + 4.2, { align: 'right' });
+          doc.text(sellStr, colX.sell, y + 4.2, { align: 'right' });
+
+          if (marginVal >= 0) {
+            doc.setTextColor(26, 107, 74);
+          } else {
+            doc.setTextColor(185, 48, 48);
+          }
+          doc.setFont('helvetica', 'bold');
+          doc.text(profitStr, colX.profit, y + 4.2, { align: 'right' });
+
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(80, 80, 80);
+          y += 6;
+        });
+      }
+
+      doc.setDrawColor(230, 230, 225);
+      doc.line(margin, y, margin + contentW, y);
+
+      // Summary totals at the bottom of the PDF
+      if (y + 25 > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      y += 5;
+      doc.setFillColor(250, 250, 245);
+      doc.rect(margin, y, contentW, 18, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.text('RINGKASAN TOTAL:', margin + 4, y + 6);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Modal: ${formatCurrency(stats.capital)}`, margin + 4, y + 12);
+      doc.text(`Estimasi Pendapatan: ${formatCurrency(stats.revenue)}`, margin + 70, y + 12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Potensi Profit: ${formatCurrency(stats.profit)}`, margin + 140, y + 12);
+
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.setDrawColor(220, 220, 215);
+        doc.setLineWidth(0.1);
+        doc.line(margin, 282, margin + contentW, 282);
+        doc.text(`Halaman ${i} dari ${totalPages}`, margin, 287);
+        doc.text('KasKu Keuangan Pribadi', margin + contentW, 287, { align: 'right' });
+      }
+
+      doc.save(`Laporan-Detail-Modal-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('📄 Berhasil mengekspor detail modal ke file PDF!');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Gagal mengekspor laporan PDF.');
+    }
+  };
+
   const columns: Column<CapitalRecord & { profit: number }>[] = [
     {
       key: 'date',
@@ -271,35 +477,57 @@ export default function CapitalPage() {
       />
 
       {/* Filters */}
-      <div className="bg-surface rounded-xl border border-border p-4 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
-            Cari Inventaris / Barang
-          </label>
-          <input
-            type="text"
-            placeholder="Cari nama barang atau catatan..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
-          />
+      <div className="bg-surface rounded-xl border border-border p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
+          <h3 className="font-bold text-[14px] text-textMain uppercase tracking-[0.6px]">Penyaringan Inventaris</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              className="px-3 py-1.5 bg-surface border border-border text-text2 hover:bg-surface2 hover:text-textMain rounded-lg text-[12.5px] font-semibold transition-colors flex items-center gap-1.5"
+            >
+              🖨️ Unduh PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadCSV}
+              className="px-3 py-1.5 bg-surface border border-border text-text2 hover:bg-surface2 hover:text-textMain rounded-lg text-[12.5px] font-semibold transition-colors flex items-center gap-1.5"
+            >
+              📥 Ekspor CSV
+            </button>
+          </div>
         </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
-            Urutkan
-          </label>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
-          >
-            <option value="date_desc">📅 Tanggal Terbaru</option>
-            <option value="date_asc">📅 Tanggal Terlama</option>
-            <option value="profit_desc">💰 Profit Tertinggi</option>
-            <option value="profit_asc">💰 Profit Terendah</option>
-            <option value="name_asc">🔤 Nama (A-Z)</option>
-            <option value="name_desc">🔤 Nama (Z-A)</option>
-          </select>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+              Cari Inventaris / Barang
+            </label>
+            <input
+              type="text"
+              placeholder="Cari nama barang atau catatan..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-text2 mb-1.5 uppercase tracking-[0.4px]">
+              Urutkan
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full p-2 border border-border rounded-lg bg-surface2 text-textMain text-[13px] outline-none focus:border-textMain focus:bg-surface"
+            >
+              <option value="date_desc">📅 Tanggal Terbaru</option>
+              <option value="date_asc">📅 Tanggal Terlama</option>
+              <option value="profit_desc">💰 Profit Tertinggi</option>
+              <option value="profit_asc">💰 Profit Terendah</option>
+              <option value="name_asc">🔤 Nama (A-Z)</option>
+              <option value="name_desc">🔤 Nama (Z-A)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -431,6 +659,7 @@ export default function CapitalPage() {
         emptyMessage="Belum ada catatan inventaris atau modal yang ditambahkan."
         emptyIcon="📦"
         mobileCard={mobileCard}
+        pagination={true}
       />
     </div>
   );

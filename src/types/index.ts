@@ -68,6 +68,8 @@ export interface CapitalRecord {
   created_at?: string;
   supplier_id?: number | null;
   customer_invoice_id?: number | null;
+  weight?: number | null;
+  price_per_kg?: number | null;
   suppliers?: {
     name: string;
   } | null;
